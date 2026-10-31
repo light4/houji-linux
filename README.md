@@ -80,7 +80,7 @@ src/ident.S         hvc #0x6000 hypervisor_identify probe
 src/stub_scan2.S    64-FID bitmap scanner
 src/stub_nop2.S     minimal "write a marker and return" stub
 src/gh_probe.c      freestanding tool that drives /dev/qgunyah directly
-docs/               findings, harness internals, pitfalls, reproduction, AVF backend check, Arch feasibility, custom-system plan, ROM inventory
+docs/               findings, harness internals, pitfalls, reproduction, AVF backend check, Arch feasibility, custom-system plan, ROM inventory, crosvm/pvmfw state
 evidence/           raw probe output, partition greps
 ```
 
@@ -114,5 +114,10 @@ separate, riskier project.
 [04-harness-pitfalls.md](docs/04-harness-pitfalls.md) — MMU-off unaligned
 access, BTI landing pads, `x0` = DTB, rodata write alignment. Each one cost
 a debugging cycle here.
+
+Two routes to a custom guest exist: the vendor loader (`/dev/qgunyah`, works up
+to image signing, which `qtestsign` satisfies — see 09) and upstream crosvm
+(`/dev/gunyah`, blocked only by a missing pVM firmware image — see
+[11](docs/11-crosvm-pvmfw.md)).
 
 [qtestsign]: https://github.com/msm8916-mainline/qtestsign
