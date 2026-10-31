@@ -36,6 +36,12 @@ and it **does** start a VM: `/dev/qgunyah` accepts `GH_CREATE_VM`,
 backends service the guest. See [07](docs/07-gunyah-direct.md) and
 `src/gh_probe.c`.
 
+Booting our **own** distribution this way is a signature problem, not a
+hypervisor one: flipping a single byte in the guest kernel makes
+`gh_rm_vm_auth_image` refuse the image, the rootfs is dm-verity protected with a
+signed root hash, and there is no auth-off switch. See
+[08](docs/08-arch-feasibility.md).
+
 ## Tripwire
 
 Re-check after firmware updates. One command, no root files needed beyond su:
@@ -67,7 +73,7 @@ src/ident.S         hvc #0x6000 hypervisor_identify probe
 src/stub_scan2.S    64-FID bitmap scanner
 src/stub_nop2.S     minimal "write a marker and return" stub
 src/gh_probe.c      freestanding tool that drives /dev/qgunyah directly
-docs/               findings, harness internals, pitfalls, reproduction, AVF backend check
+docs/               findings, harness internals, pitfalls, reproduction, AVF backend check, Arch feasibility
 evidence/           raw probe output, partition greps
 ```
 
