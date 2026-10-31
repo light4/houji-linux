@@ -15,8 +15,18 @@ Gunyah hypervisor from XBL onwards. Both escape routes are closed:
 | Secure Launch handover ([slbounce](https://github.com/TravMurav/slbounce)) | **not implemented** — no `mssecapp`, no `hyp_manager_launch`; the config key is parsed into a field nobody reads ([01](docs/01-secure-launch-absent.md)) |
 | Gunyah handing EL2 back | **no such call in the ABI** — Gunyah's host ABI is `hvc 0x6000+`, a VM-management API only ([03](docs/03-gunyah-hvc-abi.md)) |
 
+The Android virtualization framework (Terminal app, `vm`, third-party
+`android.system.virtualmachine` apps) is blocked too, but for a second,
+independent reason: this AVF build ships **no Gunyah backend** — it is
+crosvm-on-KVM, so forcing the `protected_vm.supported` property only moves the
+failure to the missing `/dev/kvm` ([06](docs/06-avf-is-kvm-only.md)).
+
 The `0x8600_xxxx` vendor SMC range is not Gunyah at all, it is SMCI to
 TrustZone — probing it is a dead end ([02](docs/02-smc-is-smci.md)).
+
+Qualcomm's own QVT stack, by contrast, does work — `vendor.qvirtmgr.cpusys_vm`
+is `RUNNING` and a Gunyah guest is live right now — but it is vendor-private
+and only accepts its own images from `/vendor/vm-system/`.
 
 ## Tripwire
 
@@ -30,6 +40,15 @@ Any hit means Secure Launch shipped, and the harness in `src/` is the right
 starting point again (`src/probe_stub.S` already has the EL1→EL2 entry
 skeleton).
 
+For the framework route, watch for a Gunyah backend appearing in the APEX:
+
+```bash
+adb shell su -c 'strings /apex/com.android.virt/bin/virtualizationservice | grep -c gunyah'
+```
+
+`0` today. A non-zero count means AVF stopped depending on `/dev/kvm` and the
+Terminal route re-opens independently of Secure Launch.
+
 ## Layout
 
 ```
@@ -39,7 +58,7 @@ src/probe_stub.S    general SMCCC prober, records into linux_banner, safe fallba
 src/ident.S         hvc #0x6000 hypervisor_identify probe
 src/stub_scan2.S    64-FID bitmap scanner
 src/stub_nop2.S     minimal "write a marker and return" stub
-docs/               findings, harness internals, pitfalls, reproduction
+docs/               findings, harness internals, pitfalls, reproduction, AVF backend check
 evidence/           raw probe output, partition greps
 ```
 
