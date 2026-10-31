@@ -121,3 +121,8 @@ to image signing, which `qtestsign` satisfies — see 09) and upstream crosvm
 [11](docs/11-crosvm-pvmfw.md)).
 
 [qtestsign]: https://github.com/msm8916-mainline/qtestsign
+
+pvmfw obtained (see [12](docs/12-pvmfw-obtained.md)): `artifacts/pvmfw-pixel-husky-cp3a.261005.005.img`,
+extracted from a Pixel factory image via the flash.android.com JSON API plus HTTP
+range reads. It is accepted by the driver; the vendor start path then fails with
+`ENODEV`.
