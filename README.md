@@ -131,3 +131,7 @@ Forcing the stock AVF path (resetprop + permissive SELinux) also ends at the sam
 driver error, which pins the pVM route on a vendor pvmfw — see
 [13](docs/13-avf-through-vendor-path.md). A full-partition backup recipe is there
 too.
+
+A started guest still has no devices: this DT declares no virtio nodes at all, so
+`gh_virtio_backend_probe` never runs and every backend ioctl is label-addressed
+with nothing behind it — see [14](docs/14-virtio-needs-dt.md).
