@@ -53,6 +53,35 @@ pvmfw image ships in the ROM** (no `pvmfw*` in `images/`, none on the
 filesystem), which is consistent with `ro.boot.hypervisor.protected_vm.supported
 = false` and with AVF never being able to start a pVM.
 
+## AOSP's own knobs
+
+The pvmfw README documents the whole prototyping flow, two pieces of which are
+worth having here verbatim:
+
+```shell
+# build a usable image: pvmfw binary + a DICE chain appended by pvmfw-tool
+m pvmfw-tool pvmfw_bin
+pvmfw-tool custom_pvmfw ${PVMFW_BIN} ${DICE}     # DICE = tests/pvmfw/assets/dice.dat
+adb push custom_pvmfw /data/local/tmp/pvmfw
+adb root && adb shell setprop hypervisor.pvmfw.path /data/local/tmp/pvmfw
+adb shell /apex/com.android.virt/bin/vm run-microdroid --protected
+```
+
+and a debug escape hatch: `setprop hypervisor.pvmfw.path none` runs a pVM
+*without* pvmfw.
+
+Both are consumed by `virtualizationservice`, not by crosvm, and on this build
+`vm run-microdroid --protected` dies before reaching the hypervisor:
+
+```
+panicked: Device doesn't support protected or non-protected VMs
+```
+
+— that is the `ro.boot.hypervisor.*` userspace gate again
+([06](06-avf-is-kvm-only.md)), so driving crosvm directly (as above) is the only
+usable route, and it needs the image passed explicitly with
+`--protected-vm-with-firmware`.
+
 ## How to supply one
 
 AOSP documents this exact "iterate without flashing" flow in
@@ -79,3 +108,11 @@ GPT/magic trick pvmfw wants) plus a rootfs disk, and the guest boots with
 `root=/dev/vdb`.
 
 [gunyah-on-sd-guide]: https://github.com/polygraphene/gunyah-on-sd-guide
+
+## Where this stopped
+
+Obtaining the artifact. `ci.android.com`'s status endpoints and the legacy
+`androidbuildinternal` API are both 404/rate-limited from a plain client, so the
+two realistic options are (a) an authenticated client / browser download of a
+Cuttlefish build, or (b) an AOSP checkout and `m pvmfw-vbmeta pvmfw-tool`.
+Everything device-side is already proven up to this point.
