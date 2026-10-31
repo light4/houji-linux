@@ -64,12 +64,16 @@ signed by anyone the device trusts.
 
 ## Verdict
 
+> **Update:** the signature gate turned out to be open — the images are
+> *test*-signed and `qtestsign` is accepted, so 2 and 3 below are engineering,
+> not blocked. See [09](09-custom-system.md).
+
 | goal | feasible today? |
 |---|---|
 | run the shipped TUI VM | **yes** (07) |
-| swap in an Arch rootfs, keep vendor kernel | no — dm-verity root hash is signed, and its signature+cert live inside the authenticated initramfs |
-| Arch kernel + own initramfs + own rootfs | no — requires re-signing the MBN bundle with a trusted key |
-| Arch userland without any VM | **yes**, see below |
+| swap in an Arch rootfs, keep vendor kernel | **yes**, once our own signed initramfs drops dm-verity |
+| Arch kernel + own initramfs + own rootfs | **yes**, with re-signing (proven) |
+| Arch userland without any VM | yes, but out of scope for this repo |
 
 So "Arch in a VM" is a *signing* problem now, not a hypervisor problem. The
 ways forward, cheapest first:

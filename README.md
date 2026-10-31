@@ -36,10 +36,12 @@ and it **does** start a VM: `/dev/qgunyah` accepts `GH_CREATE_VM`,
 backends service the guest. See [07](docs/07-gunyah-direct.md) and
 `src/gh_probe.c`.
 
-Bootstrapping a *custom* system (own kernel, own rootfs, no proot) is one gate
-plus a known backlog — the gate is image authentication, and the existing
-signature is a **test** chain, so re-signing with [qtestsign] may well be
-enough. See [09](docs/09-custom-system.md) for the ordered plan.
+Bootstrapping a *custom* system (own kernel, own rootfs, no proot) is **not
+blocked by signing**: the SVM images are *test*-signed, and re-signing with
+[qtestsign] is accepted by `gh_rm_vm_auth_image` — verified by booting a
+deliberately patched kernel after re-signing it. What remains is a device model
+(virtio backends), a console and a watchdog keep-alive, in that order. See
+[09](docs/09-custom-system.md).
 
 Booting our **own** distribution this way is a signature problem, not a
 hypervisor one: flipping a single byte in the guest kernel makes

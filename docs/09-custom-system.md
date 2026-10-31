@@ -1,73 +1,77 @@
-# Booting a *custom* system in a VM: what is actually required
+# Booting a *custom* system in a VM: the signing gate is open
 
-Scope: no proot, no userspace sandbox — a real guest with our own kernel and
-rootfs, started through Gunyah. This is the remaining big goal, and it reduces
-to one gate plus one backlog.
+**Result first: `qtestsign` is accepted.** The SVM images are test-signed, so a
+dummy certificate chain passes `gh_rm_vm_auth_image` — including for content we
+modified ourselves. A custom guest is therefore an engineering problem, not a
+key problem.
 
-## The gate is image authentication, and it may be weaker than it looks
+## Why this was expected to be impossible, and is not
 
-`gh_rm_vm_auth_image` → TZ `mssecapp` refuses any bundle whose hash table no
-longer matches ([08](08-arch-feasibility.md)). To go further we must produce a
-bundle TZ accepts. Two things suggest this is not hopeless:
+The signature segment (`trustedvm.b04`, flags `0x2000000`) carries a chain whose
+subjects read `Generated Xiaomi Root CA`, `Generated Xiaomi Attestation CA`,
+`SecTools Test User`, `Xiaomi VMSigner`. "Generated" + "SecTools **Test** User"
+is what Qualcomm SecTools emits for test signing, not fuse-anchored production
+signing. The format is the documented MBN/ELF one (hash segment `0x8000007`,
+signature segment), which [qtestsign] implements.
 
-1. The signature segment (`trustedvm.b04`, segment flags `0x2000000`) carries a
-   certificate chain whose subjects are literally
-   `Generated Xiaomi Root CA`, `Generated Xiaomi Attestation CA`,
-   `SecTools Test User`, `Xiaomi VMSigner`. The word **Generated** plus
-   "SecTools **Test** User" is what Qualcomm's SecTools emits for *test*
-   signing, not for fuse-anchored production signing.
-2. The image format is the documented MBN/ELF one: an ELF with a hash segment
-   (`0x8000007` flags, one SHA-256 per segment) and a signature segment. That
-   format has an open implementation — [qtestsign] packs exactly this layout
-   with a dummy chain and stub signature, and it is what the MSM8916 mainline
-   community uses on devices that do not enforce fuses.
+## Experiment and result
 
-So the first experiment is cheap and precise: **re-sign the *unmodified*
-`trustedvm` bundle with qtestsign and see whether TZ still accepts it.**
+Two runs, both on a freshly booted device with the 68 MB CMA region free:
 
-* accepted → the signature path is test-key friendly and we can sign our own
-  kernel/initramfs next
-* rejected → auth is fuse-anchored; the game becomes obtaining a Xiaomi/
-  Qualcomm key, and everything below still has to exist for the day we do
+1. re-signed the **unmodified** bundle → `set_fw_name` returned `0`,
+   `vcpu_count` 2, vCPUs created, `gh_vcpu_run` blocked (guest executing)
+2. re-signed the bundle whose kernel had one byte changed
+   (`Linux version` → `Linux Xersion`) → identical result: `set_fw_name` `0`
 
-## What a custom guest needs, independent of signing
+For comparison, serving the *same* patched byte without re-signing yields
+`gh_rm_vm_auth_image: VM_AUTH_IMAGE failed with err: -22`
+([08](08-arch-feasibility.md)). So auth is real, and it accepts our signature.
 
-1. **Our own cmdline.** Signing our own initramfs lets us drop dm-verity
-   entirely (`root=/dev/vda rw` or a small initramfs that mounts by label), so
-   the rootfs no longer needs a signed root hash.
-2. **A host-side `virtio-blk` backend.** Currently nothing backs the disk:
-   `vmmgr` sets up loop devices and `qcom,svm_neuron_block` grants, and our
-   `gh_probe` does none of it. Needs `GH_GET_SHARED_MEMORY_SIZE` (0xB261),
-   `GH_IOEVENTFD` (0xB262), `GH_IRQFD` (0xB263), `GH_WAIT_FOR_EVENT` (0xB264)
-   and the virtio feature/queue plumbing from `gh_virtio_backend_ioctl`.
-3. **A console.** The vendor kernel has **no** `virtio_console` and no
-   `virtio_gpu`; once we can sign, our own kernel just enables them, otherwise
-   the guest is a black box.
-4. **Watchdog keep-alive**, so a booting guest does not reset the host after a
-   few seconds (`gh_virt_wdt`, vmid 45).
-5. **A guest image**: arm64 kernel + minimal initramfs + rootfs (ext4),
-   assembled as an MBN bundle (`<name>.mdt` + `.b00…`), placed where `ueventd`
-   resolves it (the bind-mount + `vendor_vm_qti_system_file` relabel trick from
-   08 keeps `/product` untouched).
+## How to produce a loadable bundle
 
-## Ordered plan
+```bash
+# 1. rebuild the combined image from header + segments at their phdr offsets
+# 2. sign it (v6 header, multi-image type)
+qtestsign.py -v 6 -o signed.bin multi-image combined.bin
+# 3. split back into .mdt + .b00 .b01 … following the new phdrs:
+#    .mdt  = bytes[0 : end of the last non-PT_LOAD segment]   (header + hash + sig)
+#    .b00  = bytes[0 : 0x d4]                                 (ELF header)
+#    .bNN  = payload of the Nth PT_LOAD segment
+```
 
-| step | goal | cost |
-|---|---|---|
-| 1 | qtestsign the unmodified bundle, run `gh_probe`, read `VM_AUTH_IMAGE` | minutes |
-| 2 | virtio-blk + console backend in `gh_probe` (works with the vendor guest too) | days–weeks |
-| 3 | if 1 succeeded: sign a trivial custom bundle (own cmdline, shell initramfs) and watch the console | days |
-| 4 | real rootfs, display path, watchdog handling | project |
+Deliver it through the **direct** firmware path, not the ueventd fallback:
 
-Steps 1 and 2 are independent and can be attacked in either order; 3 is
-worthless if 1 fails.
+```bash
+adb shell su -c 'mount -o rw,remount /vendor/firmware_mnt'
+# copy the bundle into /vendor/firmware_mnt/image/  (label/context already
+# firmware_file, and the kernel loads it directly)
+```
 
-## Fallbacks if test keys are rejected
+The fallback path (`/product/vm-system/...` via bind mount) works too but
+`ueventd` dies with `sendfile failed … Out of memory` on the 10 MB kernel
+segment, and the bind mount has to be made in init's mount namespace and
+relabelled `vendor_vm_qti_system_file`. The vfat partition is simpler and
+survives reboots until you remove the files.
 
-* hunt a leaked/derived Xiaomi `VMSigner` key (nothing public found so far);
-* find a firmware revision whose `gh-secure-vm-loader` node has auth disabled —
-  but the auth mode comes from the hypervisor-side DT in XBL, not from
-  anything writable;
-* get the vendor to expose a non-secure VM slot.
+## What is still missing (engineering, in order)
+
+1. **Our own cmdline.** Sign an initramfs of ours and drop dm-verity
+   (`root=/dev/vda rw`, or an initramfs that mounts by label). This also
+   removes the signed-root-hash problem for the rootfs entirely, so any ext4
+   image works.
+2. **Host-side `virtio-blk` backend.** Nothing backs the disk today; `vmmgr`
+   does loop devices and `qcom,svm_neuron_block` grants, `gh_probe` does not.
+   Needs `GH_GET_SHARED_MEMORY_SIZE` (0xB261), `GH_IOEVENTFD` (0xB262),
+   `GH_IRQFD` (0xB263), `GH_WAIT_FOR_EVENT` (0xB264) plus the virtio
+   feature/queue plumbing of `gh_virtio_backend_ioctl`.
+3. **A console.** The vendor kernel has 0 refs to `virtio_console` and
+   `virtio_gpu`; with our own kernel we enable `virtio_console` (and
+   `virtio_mmio`) and get a shell.
+4. **Watchdog keep-alive** for vmid 45 (`gh_virt_wdt`) so the host stops
+   resetting a few seconds in.
+5. **The guest itself**: arm64 kernel + initramfs + ext4 rootfs, bundled,
+   signed, tested.
+
+Steps 1–2 are the next sprint; 5 is only meaningful once a console exists.
 
 [qtestsign]: https://github.com/msm8916-mainline/qtestsign
