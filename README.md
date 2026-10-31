@@ -126,3 +126,8 @@ pvmfw obtained (see [12](docs/12-pvmfw-obtained.md)): `artifacts/pvmfw-pixel-hus
 extracted from a Pixel factory image via the flash.android.com JSON API plus HTTP
 range reads. It is accepted by the driver; the vendor start path then fails with
 `ENODEV`.
+
+Forcing the stock AVF path (resetprop + permissive SELinux) also ends at the same
+driver error, which pins the pVM route on a vendor pvmfw — see
+[13](docs/13-avf-through-vendor-path.md). A full-partition backup recipe is there
+too.
