@@ -84,6 +84,37 @@ ways forward, cheapest first:
    `gh-secure-vm-loader` with auth disabled, or a hypervisor-side config change
    (XBL) that adds a non-secure VM slot — both are outside our write access.
 
+## Variation: keep Xiaomi's kernel and just put Nix inside the guest
+
+It does not help much, and it is blocked four times over:
+
+1. **No root disk to boot.** The vendor config expects
+   `/data/misc/vm-system/system.img`; that directory is empty on this build.
+   Only the *second* (persist) disk exists:
+   `/mnt/product/vm-persist/trustedvm/persist.img`, 29 MB, first block all zero.
+2. **Our own rootfs fails verity.** The root hash and its PKCS#7 signature are
+   in the authenticated `verity.cmdline`; the signature names a *Xiaomi
+   VMSigner* certificate. Replacing the disk changes the hash, and we cannot
+   re-sign without the key. Editing the cmdline means editing the initramfs,
+   which is inside the signed bundle — same wall.
+3. **No host-side block backend yet.** `vmmgr` sets up loop devices and the
+   `qcom,svm_neuron_block` grants; our ioctl tool does none of that, so the
+   guest would find a dead `virtio_blk`.
+4. **The guest has no console.** The kernel contains `virtio_blk` (8 refs) but
+   **0 refs to `virtio_console` and `virtio_gpu`**. Even a booting guest is a
+   black box; you would have to build a console/display path first.
+
+Note the ordering: keeping the vendor kernel saves a kernel build but does not
+save the signature work, because the rootfs hash is signed separately. If you
+can sign anything at all, you can just as well ship your own kernel.
+
+### So what does give you Nix on this phone?
+
+Nix without a VM, on the Android kernel: `nix-on-droid` (proot sandbox, no
+root, F-Droid) or Nix inside Termux. That is a real aarch64 nixpkgs, today,
+with none of the four blockers above — and independent of Gunyah, `/dev/kvm`
+and the whole investigation in this repo.
+
 ## Notes for whoever retries
 
 * every failure path leaks the 68 MB CMA allocation → **one attempt per boot**
