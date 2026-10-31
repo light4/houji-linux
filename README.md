@@ -135,3 +135,8 @@ too.
 A started guest still has no devices: this DT declares no virtio nodes at all, so
 `gh_virtio_backend_probe` never runs and every backend ioctl is label-addressed
 with nothing behind it — see [14](docs/14-virtio-needs-dt.md).
+
+The virtio backends are now declared with a **dtbo overlay** and the driver picks
+them up (`Recognized virtio backend device with label 10/11`,
+`shmem_size 108000`); the overlay's format traps and rollback command are in
+[15](docs/15-dtbo-overlay-virtio.md).
