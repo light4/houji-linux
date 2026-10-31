@@ -50,6 +50,26 @@ are all in place (hypervisor found, block device attached, firmware size
 accepted), so the failure is inside the vendor `gh_vm_mgr` start path, not in
 crosvm.
 
+## Does the stock ROM carry a pvmfw? No
+
+Searched the local dumpset (`houji_images_OS3.0.7.0`) end to end:
+
+| file | pvmfw content |
+|---|---|
+| `images/` (93 entries, incl. `super.img`, `*_a`-style partitions) | **no `pvmfw*` image at all** |
+| `vendor_boot.img` | 12 hits, all inside DTBs: `/reserved-memory/pvmfw_region@0x824a0000`, `pvmfw_mem` |
+| `boot.img` (the kernel) | `pvmfw`, `pvmfw_load_addr`, `pvmfw_entry_vcpu` — but these belong to **pKVM's nVHE**, the binary does not run here |
+| device `/dev/block/by-name` | no `pvmfw` partition |
+| device `/vendor/firmware_mnt/image` | nothing matching |
+
+So the platform reserves a 1 MiB region, the kernel carries a `gh_vm_mgr`, and
+nobody ships the firmware that is supposed to live in that region. The vm_mgr is
+built into the kernel (`/proc/kallsyms: T gh_dev_vm_mgr_ioctl`, no module tag),
+i.e. not in the partially-OSS dump either, and there is no `gh-vm-mgr` node in
+the live device tree to point at a firmware name. That is why a supplied pvmfw
+gets accepted but `start` fails with `ENODEV`: the vendor path, not crosvm, is
+where the remaining expectations live.
+
 ## Hypotheses to try next
 
 1. **A Qualcomm-built pvmfw.** Pixel's pvmfw is plain AOSP; the vendor driver may
