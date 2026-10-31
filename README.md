@@ -1,0 +1,75 @@
+# Xiaomi 14 (houji) — EL2 / `/dev/kvm` research
+
+Why this repo exists: to stop the next person (likely future me) from
+re-running a week of dead ends on Android virtualization on this device.
+
+## Conclusion first
+
+**This firmware cannot give you `/dev/kvm`.** The kernel side is already
+ready — `CONFIG_KVM=y` and `kvm-arm.mode=protected` are in the shipped
+cmdline — but KVM needs the CPU at EL2, and on houji EL2 belongs to Qualcomm's
+Gunyah hypervisor from XBL onwards. Both escape routes are closed:
+
+| Route to EL2 | State on this firmware |
+|---|---|
+| Secure Launch handover ([slbounce](https://github.com/TravMurav/slbounce)) | **not implemented** — no `mssecapp`, no `hyp_manager_launch`; the config key is parsed into a field nobody reads ([01](docs/01-secure-launch-absent.md)) |
+| Gunyah handing EL2 back | **no such call in the ABI** — Gunyah's host ABI is `hvc 0x6000+`, a VM-management API only ([03](docs/03-gunyah-hvc-abi.md)) |
+
+The `0x8600_xxxx` vendor SMC range is not Gunyah at all, it is SMCI to
+TrustZone — probing it is a dead end ([02](docs/02-smc-is-smci.md)).
+
+## Tripwire
+
+Re-check after firmware updates. One command, no root files needed beyond su:
+
+```bash
+adb shell su -c 'strings /dev/block/by-name/hyp_a | grep -E "mssecapp|hyp_manager_launch"'
+```
+
+Any hit means Secure Launch shipped, and the harness in `src/` is the right
+starting point again (`src/probe_stub.S` already has the EL1→EL2 entry
+skeleton).
+
+## Layout
+
+```
+patch.py            hijack arm64 Image entry in a dumped boot.img, splice a stub
+run.sh              flash + boot + classify (BOOTED / REBOOTED-TO-FASTBOOT / DEAD)
+src/probe_stub.S    general SMCCC prober, records into linux_banner, safe fallback
+src/ident.S         hvc #0x6000 hypervisor_identify probe
+src/stub_scan2.S    64-FID bitmap scanner
+src/stub_nop2.S     minimal "write a marker and return" stub
+docs/               findings, harness internals, pitfalls, reproduction
+evidence/           raw probe output, partition greps
+```
+
+`baseline/` holds a byte-exact `boot_a` dump (`sha256
+c88537b854911c142a920989865b663a5b7e0b3faab7025a7858b7a7adddafa9`, OS 3.0.7.0).
+It is 96 MB and kept out of git; dump it yourself with
+`dd if=/dev/block/by-name/boot_a` (see [reproduction](docs/05-reproduction.md)).
+
+## Quickstart
+
+```bash
+fastboot flash boot baseline/boot_a_OS3.0.7.0_orig.img   # rollback, always works
+python3 patch.py baseline/boot_a_OS3.0.7.0_orig.img build/x.img --stub probe_stub.S
+./run.sh build/x.img
+adb shell su -c 'dmesg | head -3'                        # stub output lands here
+```
+
+Results are reported by overwriting part of the `Linux version …` banner the
+kernel prints on every boot — no framebuffer driver, no debug channel.
+
+## Safety
+
+Nothing is written to flash except `boot_a`, and the rollback is that same
+one-line `fastboot flash boot`. A bad stub dead-hangs (bootloader watchdog
+brings fastboot back after ~2 min, or power-cycle and hold Vol-Down+Power).
+`hyp_a`/`xbl` are signature checked by XBL; flashing a self-built Gunyah is a
+separate, riskier project.
+
+## Read the pitfalls before writing a stub
+
+[04-harness-pitfalls.md](docs/04-harness-pitfalls.md) — MMU-off unaligned
+access, BTI landing pads, `x0` = DTB, rodata write alignment. Each one cost
+a debugging cycle here.
