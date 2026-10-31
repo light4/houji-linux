@@ -25,8 +25,14 @@ The `0x8600_xxxx` vendor SMC range is not Gunyah at all, it is SMCI to
 TrustZone — probing it is a dead end ([02](docs/02-smc-is-smci.md)).
 
 Qualcomm's own QVT stack, by contrast, does work — `vendor.qvirtmgr.cpusys_vm`
-is `RUNNING` and a Gunyah guest is live right now — but it is vendor-private
-and only accepts its own images from `/vendor/vm-system/`.
+is `RUNNING` and a Gunyah guest is live right now — but it is vendor-private.
+
+That stack can also be driven from a root tool without the vendor service:
+`/dev/qgunyah` accepts `GH_CREATE_VM`, `GH_VM_SET_FW_NAME` and `GH_CREATE_VCPU`
+and all of them succeed. It stops one step later, in the secure image loader,
+because the CMA pool is exhausted (`CmaFree: 0 kB`). See
+[07](docs/07-gunyah-direct.md) and `src/gh_probe.c` for the ioctl map and the
+tool.
 
 ## Tripwire
 
@@ -58,6 +64,7 @@ src/probe_stub.S    general SMCCC prober, records into linux_banner, safe fallba
 src/ident.S         hvc #0x6000 hypervisor_identify probe
 src/stub_scan2.S    64-FID bitmap scanner
 src/stub_nop2.S     minimal "write a marker and return" stub
+src/gh_probe.c      freestanding tool that drives /dev/qgunyah directly
 docs/               findings, harness internals, pitfalls, reproduction, AVF backend check
 evidence/           raw probe output, partition greps
 ```
