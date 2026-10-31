@@ -80,7 +80,7 @@ src/ident.S         hvc #0x6000 hypervisor_identify probe
 src/stub_scan2.S    64-FID bitmap scanner
 src/stub_nop2.S     minimal "write a marker and return" stub
 src/gh_probe.c      freestanding tool that drives /dev/qgunyah directly
-docs/               findings, harness internals, pitfalls, reproduction, AVF backend check, Arch feasibility, custom-system plan
+docs/               findings, harness internals, pitfalls, reproduction, AVF backend check, Arch feasibility, custom-system plan, ROM inventory
 evidence/           raw probe output, partition greps
 ```
 
