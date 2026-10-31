@@ -27,12 +27,14 @@ TrustZone — probing it is a dead end ([02](docs/02-smc-is-smci.md)).
 Qualcomm's own QVT stack, by contrast, does work — `vendor.qvirtmgr.cpusys_vm`
 is `RUNNING` and a Gunyah guest is live right now — but it is vendor-private.
 
-That stack can also be driven from a root tool without the vendor service:
-`/dev/qgunyah` accepts `GH_CREATE_VM`, `GH_VM_SET_FW_NAME` and `GH_CREATE_VCPU`
-and all of them succeed. It stops one step later, in the secure image loader,
-because the CMA pool is exhausted (`CmaFree: 0 kB`). See
-[07](docs/07-gunyah-direct.md) and `src/gh_probe.c` for the ioctl map and the
-tool.
+That stack can also be driven from a root tool without the vendor service —
+and it **does** start a VM: `/dev/qgunyah` accepts `GH_CREATE_VM`,
+`GH_VM_SET_FW_NAME`, `GH_CREATE_VCPU` and `GH_VCPU_RUN`, the firmware
+`trustedvm` gets authenticated and loaded, both proxy-scheduled vCPUs come up
+(`gh_proxy_sched: vmid=45 … virq_num=406/407`) and the loader logs
+`VM:45 started running`. The host resets a few seconds later because no virtio
+backends service the guest. See [07](docs/07-gunyah-direct.md) and
+`src/gh_probe.c`.
 
 ## Tripwire
 

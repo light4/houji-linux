@@ -1,0 +1,21 @@
+# create_vm / set_fw_name / create_vcpu x2 on a freshly booted device,
+# CMA region trust_ui_vm_region@f3800000 free, dynamic debug on gunyah_loader
+open: 0x0000000000000003
+create_vm: 0x0000000000000004
+setfw: 0x0000000000000000
+vcpu_count: 0x0000000000000002
+create_vcpu 0x0000000000000005
+create_vcpu 0x0000000000000006
+run vcpu0...            <- blocks, guest is executing
+
+# firmware is served by ueventd through a vendor helper, from /product, not /vendor
+gh_secure_vm_loader soc:gh-secure-vm-loader@0: Direct firmware load for trustedvm.b03 failed with error -2
+ueventd: Launching external firmware handler '/vendor/bin/vmmgr -r' for devpath: '.../firmware/trustedvm.b03'
+ueventd: Loading firmware 'trustedvm/boot/trustedvm.b03' in place of 'trustedvm.b03'
+ueventd: found /product/vm-system/trustedvm/boot/trustedvm.b03
+
+# the VM is created and proxy-scheduled on two dedicated VIRQs
+gunyah_loader: VM: 45 status 2 complete
+gh_proxy_sched: vmid=45 cpu_index:0 vcpu_cap_id:11612995811917685144 virq_num=406 irq_name=gh_vcpu_irq_45_0 nr_vcpus:1
+gh_proxy_sched: vmid=45 cpu_index:1 vcpu_cap_id:11612995811917633591 virq_num=407 irq_name=gh_vcpu_irq_45_1 nr_vcpus:2
+gunyah_loader: VM:45 started running
