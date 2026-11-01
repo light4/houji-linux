@@ -47,3 +47,6 @@ Not implemented: `ACK_DRIVER_OK` (`0xC004B26B`, `0xC004BC0B`) → dmesg
 * `setfw` on an unsigned/rebuilt bundle fails `VM_AUTH_IMAGE`; re-sign first
   ([bundle-format](bundle-format.md)).
 * one VM per boot: a failed attempt leaks the 68 MB `trust_ui_vm_region` CMA.
+* **order matters**: `GH_VM_SET_FW_NAME` must come before `0x8008B261`
+  (reserved memory size). On a fresh VM that ioctl answers `EINVAL` — which is
+  exactly why the shipped `qcrosvm` aborts (`journal/40`).

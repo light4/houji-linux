@@ -54,12 +54,11 @@ verification.
 guest memory base, 2 MB-aligned segment offsets, `PT_LOAD` flags `0x6`. Keep
 that when constructing bundles, even though it is not sufficient on its own.
 
-## Decisive test left
+## Done: the vendor launcher is ruled out
 
-Get **`qcrosvm`** to boot `trustedvm` (its `-l` mode needs
-`/sys/kernel/load_guestvm_<vm>`, which the loader creates only in that mode). If
-the vendor launcher fails the same way, this ROM/hyp pair is the limit rather
-than our code.
+`qcrosvm` aborts on this ROM for every VM (also `cpusys_vm`) and its sysfs boot
+node does not exist (`journal/40`). It is a newer-generation binary; it becomes
+useful again only after a firmware update that ships the matching driver.
 
 ## Parked
 

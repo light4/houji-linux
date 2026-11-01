@@ -123,6 +123,11 @@ next bisect step.
   (`journal/39`). The reachable configuration space is exhausted; the remaining
   differences are host/hyp-side or inside the vendor launcher.
 
+* the shipped launcher cannot run here: it asks for the reserved memory size
+  **before** `set_fw_name` (this driver wants it after) and its `-l` mode needs a
+  `/sys/kernel/load_guestvm_<vm>` that no module in this ROM provides
+  (`journal/40`). Our probe is the only working path, not a duplicate.
+
 ## Tooling notes that save a round
 
 * loader lifecycle logs are `dev_dbg`: re-enable with
