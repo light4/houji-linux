@@ -109,6 +109,10 @@ config segment is a plain FDT with `affinity = "pinned"`, extra `vm-attrs`
 "no virtio at all" shape makes a backend-free `trustedvm` variant the cleanest
 next bisect step.
 
+* `VCPU_RUN` **blocks** (verified with `timeout`: `RC=124`) — the vCPU is entered
+  and parked in the hypervisor; the VM is torn down a few seconds later while the
+  call is still blocked (`journal/37`).
+
 ## Tooling notes that save a round
 
 * loader lifecycle logs are `dev_dbg`: re-enable with

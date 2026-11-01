@@ -16,7 +16,9 @@ Programs are freestanding: raw syscalls via inline `svc`, no libc.
 The VM crash resets the phone in under half a second. A shell `>` redirect and a
 one-shot `dmesg` both lose everything. Working pattern:
 
-* the tool opens `/data/local/tmp/o.txt` itself and `fsync`s after every write;
+* the tool opens `/data/local/tmp/o.txt` itself and `fsync`s after every write —
+  **a shell redirect captures only stdout and is nearly empty, so always read
+  `o.txt`**;
 * kernel log: `dmesg -w > /data/local/tmp/d.txt &` plus
   `while true; do sync; done &` — the `sync` loop is what makes it survive;
 * loader logs are `dev_dbg`:
