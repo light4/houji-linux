@@ -145,3 +145,7 @@ The whole backend setup path now works (`ack_reset` → features → queue max �
 mmap → `irqfd`/`ioeventfd` → wait), with three traps recorded — `flags` must be
 1, labels are hex, and every label has to be declared — see
 [16](docs/16-virtio-backend-sequence.md).
+
+Host-side backend arming is complete (features, queue max, device config, mmap,
+`irqfd`/`ioeventfd` on both labels) but the guest never probes the device — the
+guest DT is the open question, see [17](docs/17-backend-up-guest-silent.md).
