@@ -73,6 +73,11 @@ bundle is installed on the device right now; delete
   itself, early, on its own (`journal/29`, corrected in `journal/30`).
 * an inert guest is eventually abandoned (~10 s), so something waits for
   progress; that is separate from the 0.5 s kernel death.
+* the backend eventfds (`irqfd`, `ioeventfd`) never fire and
+  `GH_WAIT_FOR_EVENT` never returns: the driver sees no guest activity at all —
+  so there is no evidence the guest ever executes an instruction
+  (`journal/31`).
+* arm64 has no `poll(2)`; use `ppoll` or non-blocking eventfd reads.
 * **segment indices shift after signing**: `b02` is the kernel in a delivered
   bundle, `b01` is the hash block (`journal/30`).
 * the device is on the **stock** bundle again; the stub bundle lives in `/tmp`
