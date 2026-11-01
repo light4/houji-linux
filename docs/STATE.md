@@ -78,6 +78,10 @@ bundle is installed on the device right now; delete
   so there is no evidence the guest ever executes an instruction
   (`journal/31`).
 * arm64 has no `poll(2)`; use `ppoll` or non-blocking eventfd reads.
+* `VCPU_RUN` does reach the hypervisor (the `started running` print sits right
+  after that call in `gh_vcpu_ioctl`), but the driver exposes **no vCPU
+  state/register ioctl** — the backend event path is the only observable
+  (`journal/32`).
 * **segment indices shift after signing**: `b02` is the kernel in a delivered
   bundle, `b01` is the hash block (`journal/30`).
 * the device is on the **stock** bundle again; the stub bundle lives in `/tmp`

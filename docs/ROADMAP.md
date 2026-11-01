@@ -22,9 +22,9 @@ verification.
   side, not a panic (`journal/26`, `journal/27`).
 * watch `/proc/vmkmsg` as soon as a guest survives long enough to write to it
   (`journal/28`).
-* read the loader's start path in `gunyah_loader` (around the
-  `VM:%d started running` print): what it does with segments, entry point and
-  `VCPU_RUN` — userspace hypotheses are exhausted (`journal/31`).
+* read the start path of the one VM that works, `cpusys_vm` (vmid 50): its
+  dmesg lines, proxy-sched setup and VM-create arguments — the only reference
+  that is known-good on this device (`journal/32`).
 * stub guest already proves the point (`journal/29`): make it touch the virtio
   window (`ldr` of the magic at `0xda6f8000`), then loop — if that keeps the VM
   alive the device is reachable and only the handshake is missing.
