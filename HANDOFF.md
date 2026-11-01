@@ -55,16 +55,25 @@ GH_VCPU_RUN                       0xB280        blocks
 * a plain `>` redirect loses data on reset — tools open their own output file
   and `fsync` after each write.
 
+## Corrections from `docs/19` (read it)
+
+* the VM **does** start (`started running`); the reset is the guest faulting.
+* the dtbo overlay is **not** merged into the Linux DT and the loader recognizes
+  the backends from `trustedvm.b02` alone — the overlay is irrelevant, keep the
+  stock dtbo.
+* `GH_ACK_DRIVER_OK` is **not implemented** (`cmd not supported`).
+* capture the loader log with `dmesg -w > file &` **plus**
+  `while true; do sync; done`, otherwise nothing survives the reset.
+
 ## Next hypotheses (in order)
 
-1. `GH_ACK_DRIVER_OK` (0xC004B26B / takes `__u32 label`) pre-set for the console
-   before `VCPU_RUN`.
-2. Compare the guest DT's `interrupts` for both nodes with the virqs the hyp
-   assigns (dmesg `gh_proxy_sched`, interrupt allocation lines).
-3. Re-sign `trustedvm.b02` with `console=hvc0` removed from
-   `chosen.bootargs`, so the guest does not depend on a working console.
-4. If the guest still faults: back only the console first and give it a trivial
-   initramfs (our own b01/b03), i.e. take the vendor kernel out of the picture.
+1. find the feature bits the driver accepts for word 1 (`set_features 1/0x1e
+   failed ret 30`): try 0x01 alone, then 0x00.
+2. `trustedvm.b02` is a **template** (`generate = "/virtio-mmio"`, no `reg`, no
+   `interrupts`). Let `vendor.qvirtmgr`/`qvirtservice` bring up `trustedvm` and
+   look at the guest DT they produce, then diff.
+3. patch `trustedvm.b02` into a static guest DT (we can re-sign it), drop
+   `console=hvc0` from `chosen.bootargs` in the same pass.
 
 ## Rollback / restore
 
