@@ -95,15 +95,16 @@ virtualization.
 
 ## Option 3 — unauthenticated VM on `/dev/gunyah`
 
-The only route that is hardware virtualization with our own kernel. Status
-([journal/42](journal/42-patched-bundles-never-loaded.md)): configure and init are
-accepted, `VM_START` returns `NORESOURCE`; the RM does parse crosvm's
-`gunyah-vm-config` (`pinned`/`static` affinity fail init), but proxy affinity,
-affinity maps and dropping optional devices do not change the start failure.
-Next suspect: memory lending (crosvm lends host user pages; the working VMs use
-carve-outs). The hyp contains "PVM only variant" strings, so it may simply be
-forbidden on this firmware. Worth a bounded effort; otherwise wait for a firmware
-update.
+The only route that is hardware virtualization with our own kernel. Status ([journal/42](journal/42-patched-bundles-never-loaded.md),
+[journal/44](journal/44-crosvm-start-is-nomem.md)): configure and init are
+accepted, `VM_START` fails with **`NOMEM`** — hyp-side allocation, independent of
+`--mem` (16 MB…1 GB), of optional devices and of doorbell count, even on a freshly
+booted device. `pinned`/`static` affinity fail earlier with `MAP_FAILED`, and
+`vm-attrs = "crash-fatal"` turns the reply into `BUSY`, so the config *is* parsed;
+the shortfall happens before attributes matter. Reading: the hyp's tables are
+sized for the VMs declared in its devcfg and an undeclared extra VM has no budget
+("PVM only variant", `hyp_extra_heap_size`). Not verifiable from the host — this
+build logs nothing. Bounded effort; otherwise wait for a firmware update.
 
 ## Recommendation
 
