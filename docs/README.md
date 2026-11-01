@@ -1,6 +1,7 @@
 # Docs
 
-Start with [FINDINGS](FINDINGS.md) (one page, results and boundary), then
+Start with [FINDINGS](FINDINGS.md) (one page, results and boundary) and
+[OPTIONS](OPTIONS.md) (the three ways forward), then
 [STATE](STATE.md) (exact state), [ROADMAP](ROADMAP.md) (what is left) and
 [RESTORE](RESTORE.md) (rollback).
 
@@ -71,6 +72,7 @@ later corrected. Where it disagrees with `reference/`, the reference wins.
 | [40](journal/40-why-qcrosvm-cannot-run-here.md) | ~~why the vendor launcher cannot run here~~ (wrong, see 41) |
 | [41](journal/41-stock-launcher-same-failure.md) | ROM matches stock; `cpusys_vm` runs via `qcrosvm`; vendor launcher fails on `trustedvm` like our probe |
 | [42](journal/42-patched-bundles-never-loaded.md) | **patched bundles were never loaded; `qtestsign` is rejected** — invalidates 09, 25–39 |
+| [43](journal/43-kernel-config-and-droidian.md) | stock kernel config gaps, existing drivers, Droidian's android14-6.1 kernel |
 
 ### Harness
 

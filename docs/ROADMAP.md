@@ -1,7 +1,8 @@
 # Roadmap
 
-Parked on this firmware — see [FINDINGS](FINDINGS.md). Everything here needs
-either a newer ROM or kernel RE beyond the reach of userspace.
+Three options for running Arch/NixOS are compared in [OPTIONS](OPTIONS.md). This
+page tracks option 3 (hardware virtualization); options 1 and 2 have their plans
+there.
 
 ## The one open question
 

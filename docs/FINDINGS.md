@@ -80,6 +80,11 @@ So on this firmware: no `/dev/kvm`, no custom code in a secured VM, and the
 unauthenticated path refused by the RM. Proot-style containers are the only way to
 run Arch/NixOS userspace here today.
 
+## What next
+
+The three remaining options — native Linux as the primary OS, a real chroot, and
+the unauthenticated VM — are compared in [OPTIONS](OPTIONS.md).
+
 ## Tripwires for a firmware update
 
 ```bash

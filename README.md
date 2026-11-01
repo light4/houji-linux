@@ -7,7 +7,9 @@ the Xiaomi 14. `/dev/kvm` is not part of this: it is closed on this firmware
 Status: **blocked — no route runs custom code on this firmware.** Read
 [docs/FINDINGS.md](docs/FINDINGS.md) for the one-page result and its honest
 boundary, [docs/STATE.md](docs/STATE.md) for exact current state, and
-[docs/ROADMAP.md](docs/ROADMAP.md) for what is left.
+[docs/ROADMAP.md](docs/ROADMAP.md) for what is left, and
+[docs/OPTIONS.md](docs/OPTIONS.md) for the three ways forward (native Linux,
+chroot, unauthenticated VM).
 
 ## Where it stands
 
@@ -68,6 +70,7 @@ patch.py, run.sh      boot.img stub harvester
 tools/patch_b02.py    replace one guest-DT entry in a bundle
 tools/rebuild_bundle.py  re-assemble, sign and split a bundle
 docs/FINDINGS.md      one-page results and what is still unknown
+docs/OPTIONS.md       three ways to run Arch/NixOS, compared
 docs/STATE.md         current state and verified call sequence
 docs/ROADMAP.md       next moves and parked routes
 docs/RESTORE.md       rollback, stock hashes, dead-hang recovery
