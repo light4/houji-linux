@@ -32,7 +32,7 @@ So the implemented surface is exactly:
 
 **There is no vcpu/DT boot-context call.** The guest entry state is entirely
 hyp-side, taken from the authenticated image and the bundle's own DT — userspace
-cannot influence it. Combined with `docs/23` (guest dead in <0.5 s, hard reset)
+cannot influence it. Combined with `23` (guest dead in <0.5 s, hard reset)
 that narrows the failure to "the bundle's guest does not survive on this
 hyp/kernel combination", not to our ioctl sequence.
 

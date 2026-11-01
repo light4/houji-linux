@@ -11,7 +11,7 @@ A 64-FID bitmap scanner (`src/stub_scan2.S`) sweeps `0x86000000..0x860000FF`.
 
 ## Result
 
-Also see [evidence](../evidence/probe-results.txt).
+Also see [evidence](../../evidence/probe-results.txt).
 
 * `0x02000121`, `0x82000121`, `0xC2000121`: `NOT_SUPPORTED`
 * `0x8200_xxxx`, `0xC600_xxxx`, `0xC200_xxxx`: nothing

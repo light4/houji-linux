@@ -37,7 +37,7 @@ GH_WAIT_FOR_EVENT {label,...}          0xC010B264   blocks, events arrive
 The guest still resets the host a few seconds in, and a plain `>` redirect
 leaves a correctly-sized file full of zeros because the data never reaches disk
 in time. The probe opens its own output file and calls `fsync` after every write;
-then the results survive ([`src/gh_virtio_probe.c`](../src/gh_virtio_probe.c),
+then the results survive ([`src/gh_virtio_probe.c`](../../src/gh_virtio_probe.c),
 `w()`).
 
 ## What is left

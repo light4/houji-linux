@@ -1,158 +1,76 @@
-**Continue from [`HANDOFF.md`](HANDOFF.md)** — current state, verified call sequence, rollback commands, next hypotheses.
+# houji (Xiaomi 14) — Gunyah VM research
 
-# Xiaomi 14 (houji) — EL2 / `/dev/kvm` research
+Getting a **custom** guest (Arch/NixOS-class, no proot) to run in a Gunyah VM on
+the Xiaomi 14. `/dev/kvm` is not part of this: it is closed on this firmware
+(see below), so the work targets Qualcomm's own hypervisor instead.
 
-Why this repo exists: to stop the next person (likely future me) from
-re-running a week of dead ends on Android virtualization on this device.
+Status: **host side done, guest side open.** Read
+[docs/STATE.md](docs/STATE.md), then [docs/ROADMAP.md](docs/ROADMAP.md).
 
-## Conclusion first
+## Where it stands
 
-**This firmware cannot give you `/dev/kvm`.** The kernel side is already
-ready — `CONFIG_KVM=y` and `kvm-arm.mode=protected` are in the shipped
-cmdline — but KVM needs the CPU at EL2, and on houji EL2 belongs to Qualcomm's
-Gunyah hypervisor from XBL onwards. Both escape routes are closed:
-
-| Route to EL2 | State on this firmware |
+| path | state |
 |---|---|
-| Secure Launch handover ([slbounce](https://github.com/TravMurav/slbounce)) | **not implemented** — no `mssecapp`, no `hyp_manager_launch`; the config key is parsed into a field nobody reads ([01](docs/01-secure-launch-absent.md)) |
-| Gunyah handing EL2 back | **no such call in the ABI** — Gunyah's host ABI is `hvc 0x6000+`, a VM-management API only ([03](docs/03-gunyah-hvc-abi.md)) |
+| vendor loader `/dev/qgunyah` | VM creates, firmware authenticates, both virtio backends arm, VM starts — **guest dies in under 0.5 s** |
+| crosvm / pVM `/dev/gunyah` | blocked: needs a vendor-signed pvmfw; `RM start` → `ENODEV` |
+| `/dev/kvm` | closed: EL2 belongs to Gunyah from XBL on |
 
-The Android virtualization framework (Terminal app, `vm`, third-party
-`android.system.virtualmachine` apps) is blocked too, but for a second,
-independent reason: this AVF build ships **no Gunyah backend** — it is
-crosvm-on-KVM, so forcing the `protected_vm.supported` property only moves the
-failure to the missing `/dev/kvm` ([06](docs/06-avf-is-kvm-only.md)).
+The vendor loader path is fully mapped: every ioctl, the guest DT inside the
+signed bundle, the label map (`0x11` console, `0x10` disk) and the vendor's own
+launcher (`/system_ext/bin/qcrosvm`) are documented. What is left is the guest
+side — a template guest DT that has to become real, and an ABI skew worth
+watching. Details: [docs/reference/qgunyah-abi.md](docs/reference/qgunyah-abi.md).
 
-The `0x8600_xxxx` vendor SMC range is not Gunyah at all, it is SMCI to
-TrustZone — probing it is a dead end ([02](docs/02-smc-is-smci.md)).
+## Why `/dev/kvm` is not the answer here
 
-Qualcomm's own QVT stack, by contrast, does work — `vendor.qvirtmgr.cpusys_vm`
-is `RUNNING` and a Gunyah guest is live right now — but it is vendor-private.
+The kernel is ready (`CONFIG_KVM=y`, `kvm-arm.mode=protected`) but KVM needs EL2
+and EL2 is Gunyah's. Both hand-back routes are closed:
 
-That stack can also be driven from a root tool without the vendor service —
-and it **does** start a VM: `/dev/qgunyah` accepts `GH_CREATE_VM`,
-`GH_VM_SET_FW_NAME`, `GH_CREATE_VCPU` and `GH_VCPU_RUN`, the firmware
-`trustedvm` gets authenticated and loaded, both proxy-scheduled vCPUs come up
-(`gh_proxy_sched: vmid=45 … virq_num=406/407`) and the loader logs
-`VM:45 started running`. The host resets a few seconds later because no virtio
-backends service the guest. See [07](docs/07-gunyah-direct.md) and
-`src/gh_probe.c`.
+* Secure Launch (`slbounce`) — not implemented in this firmware: no `mssecapp`,
+  no `hyp_manager_launch`, and the config key is parsed into a field nobody
+  reads ([journal/01](docs/journal/01-secure-launch-absent.md)).
+* Gunyah handing EL2 back — no such call in the ABI
+  ([journal/03](docs/journal/03-gunyah-hvc-abi.md)).
 
-Bootstrapping a *custom* system (own kernel, own rootfs, no proot) is **not
-blocked by signing**: the SVM images are *test*-signed, and re-signing with
-[qtestsign] is accepted by `gh_rm_vm_auth_image` — verified by booting a
-deliberately patched kernel after re-signing it. What remains is a device model
-(virtio backends), a console and a watchdog keep-alive, in that order. See
-[09](docs/09-custom-system.md).
+AVF (Terminal app, `android.system.virtualmachine`) is additionally blocked
+because this build ships no Gunyah backend at all — it is crosvm-on-KVM, so
+forcing `protected_vm.supported` only moves the failure to the missing
+`/dev/kvm` ([journal/06](docs/journal/06-avf-is-kvm-only.md)).
 
-Booting our **own** distribution this way is a signature problem, not a
-hypervisor one: flipping a single byte in the guest kernel makes
-`gh_rm_vm_auth_image` refuse the image, the rootfs is dm-verity protected with a
-signed root hash, and there is no auth-off switch. See
-[08](docs/08-arch-feasibility.md).
-
-## Tripwire
-
-Re-check after firmware updates. One command, no root files needed beyond su:
+## Tripwires after a firmware update
 
 ```bash
+# Secure Launch / slbounce
 adb shell su -c 'strings /dev/block/by-name/hyp_a | grep -E "mssecapp|hyp_manager_launch"'
-```
-
-Any hit means Secure Launch shipped, and the harness in `src/` is the right
-starting point again (`src/probe_stub.S` already has the EL1→EL2 entry
-skeleton).
-
-For the framework route, watch for a Gunyah backend appearing in the APEX:
-
-```bash
+# Gunyah backend in the AVF APEX
 adb shell su -c 'strings /apex/com.android.virt/bin/virtualizationservice | grep -c gunyah'
+# newer driver ABI that the vendor launcher expects (0 today)
+adb shell su -c 'ls /sys/kernel/load_guestvm_*'
 ```
-
-`0` today. A non-zero count means AVF stopped depending on `/dev/kvm` and the
-Terminal route re-opens independently of Secure Launch.
 
 ## Layout
 
 ```
-patch.py            hijack arm64 Image entry in a dumped boot.img, splice a stub
-run.sh              flash + boot + classify (BOOTED / REBOOTED-TO-FASTBOOT / DEAD)
-src/probe_stub.S    general SMCCC prober, records into linux_banner, safe fallback
-src/ident.S         hvc #0x6000 hypervisor_identify probe
-src/stub_scan2.S    64-FID bitmap scanner
-src/stub_nop2.S     minimal "write a marker and return" stub
-src/gh_probe.c      freestanding tool that drives /dev/qgunyah directly
-docs/               findings, harness internals, pitfalls, reproduction, AVF backend check, Arch feasibility, custom-system plan, ROM inventory, crosvm/pvmfw state
-evidence/           raw probe output, partition greps
+src/                  freestanding probes: SMCCC stubs, /dev/qgunyah drivers
+patch.py, run.sh      boot.img stub harvester
+docs/STATE.md         current state and verified call sequence
+docs/ROADMAP.md       next moves and parked routes
+docs/RESTORE.md       rollback, stock hashes, dead-hang recovery
+docs/reference/       ABI, bundle/dtbo formats, harness
+docs/journal/         chronological lab notebook
+evidence/             raw probe output, partition greps
 ```
 
-`baseline/` holds a byte-exact `boot_a` dump (`sha256
-c88537b854911c142a920989865b663a5b7e0b3faab7025a7858b7a7adddafa9`, OS 3.0.7.0).
-It is 96 MB and kept out of git; dump it yourself with
-`dd if=/dev/block/by-name/boot_a` (see [reproduction](docs/05-reproduction.md)).
-
-## Quickstart
-
-```bash
-fastboot flash boot baseline/boot_a_OS3.0.7.0_orig.img   # rollback, always works
-python3 patch.py baseline/boot_a_OS3.0.7.0_orig.img build/x.img --stub probe_stub.S
-./run.sh build/x.img
-adb shell su -c 'dmesg | head -3'                        # stub output lands here
-```
-
-Results are reported by overwriting part of the `Linux version …` banner the
-kernel prints on every boot — no framebuffer driver, no debug channel.
+`baseline/` keeps a byte-exact `boot_a` dump (96 MB, not in git) — see
+[docs/RESTORE.md](docs/RESTORE.md).
 
 ## Safety
 
-Nothing is written to flash except `boot_a`, and the rollback is that same
-one-line `fastboot flash boot`. A bad stub dead-hangs (bootloader watchdog
-brings fastboot back after ~2 min, or power-cycle and hold Vol-Down+Power).
-`hyp_a`/`xbl` are signature checked by XBL; flashing a self-built Gunyah is a
-separate, riskier project.
+Only `boot_a` is ever flashed by the harness, and the rollback is the same
+one-line `fastboot flash boot`. A bad stub dead-hangs; the bootloader watchdog
+restores fastboot in ~2 min, or power-cycle and hold Vol-Down+Power.
 
-## Read the pitfalls before writing a stub
-
-[04-harness-pitfalls.md](docs/04-harness-pitfalls.md) — MMU-off unaligned
-access, BTI landing pads, `x0` = DTB, rodata write alignment. Each one cost
-a debugging cycle here.
-
-Two routes to a custom guest exist: the vendor loader (`/dev/qgunyah`, works up
-to image signing, which `qtestsign` satisfies — see 09) and upstream crosvm
-(`/dev/gunyah`, blocked only by a missing pVM firmware image — see
-[11](docs/11-crosvm-pvmfw.md)).
+Read [the pitfalls](docs/journal/04-harness-pitfalls.md) before writing a stub:
+MMU-off unaligned access, BTI landing pads, `x0` = DTB, rodata write alignment.
 
 [qtestsign]: https://github.com/msm8916-mainline/qtestsign
-
-pvmfw obtained (see [12](docs/12-pvmfw-obtained.md)): `artifacts/pvmfw-pixel-husky-cp3a.261005.005.img`,
-extracted from a Pixel factory image via the flash.android.com JSON API plus HTTP
-range reads. It is accepted by the driver; the vendor start path then fails with
-`ENODEV`.
-
-Forcing the stock AVF path (resetprop + permissive SELinux) also ends at the same
-driver error, which pins the pVM route on a vendor pvmfw — see
-[13](docs/13-avf-through-vendor-path.md). A full-partition backup recipe is there
-too.
-
-A started guest still has no devices: this DT declares no virtio nodes at all, so
-`gh_virtio_backend_probe` never runs and every backend ioctl is label-addressed
-with nothing behind it — see [14](docs/14-virtio-needs-dt.md).
-
-The virtio backends are now declared with a **dtbo overlay** and the driver picks
-them up (`Recognized virtio backend device with label 10/11`,
-`shmem_size 108000`); the overlay's format traps and rollback command are in
-[15](docs/15-dtbo-overlay-virtio.md).
-
-The whole backend setup path now works (`ack_reset` → features → queue max →
-mmap → `irqfd`/`ioeventfd` → wait), with three traps recorded — `flags` must be
-1, labels are hex, and every label has to be declared — see
-[16](docs/16-virtio-backend-sequence.md).
-
-Host-side backend arming is complete (features, queue max, device config, mmap,
-`irqfd`/`ioeventfd` on both labels) but the guest never probes the device — the
-guest DT is the open question, see [17](docs/17-backend-up-guest-silent.md).
-
-The guest device tree ships inside the bundle (`trustedvm.b02`, a 22-entry dtbo)
-and labels are the other way round than assumed: `0x11` is the `hvc0` console,
-`0x10` is the disk — see [18](docs/18-guest-dt-in-bundle.md). Guest DT is
-editable because we can re-sign.

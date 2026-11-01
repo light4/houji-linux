@@ -1,6 +1,6 @@
 # The guest never even touches its MMIO window
 
-Follow-up measurements after `docs/21`:
+Follow-up measurements after `21`:
 
 * `0x8008B261` does return a value: **0x108000**. It is the VM's reserved/shared
   memory size, our `mmap` already used it, so that step was fine.
@@ -11,7 +11,7 @@ Follow-up measurements after `docs/21`:
 
 ## The decisive observation
 
-With the loader's log captured across the reset (see `docs/19` for the method)
+With the loader's log captured across the reset (see `19` for the method)
 the log **ends at `VM:45 started running`** — no fault, no vcpu exit, no
 `gh_panic_notifier` line, and `GH_WAIT_FOR_EVENT` never returns.
 

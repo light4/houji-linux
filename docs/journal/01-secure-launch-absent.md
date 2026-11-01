@@ -17,10 +17,10 @@ done
 
 * `mssecapp`, `hyp_manager_launch`, `SlpApp`, `tcblaunch`: **absent everywhere**
 * only trace: the string `hyp_secure_launch_enabled` inside `hyp_a`
-  ([evidence](../evidence/hyp-strings.txt))
+  ([evidence](../../evidence/hyp-strings.txt))
 * `devcfg_a` has no `hyp_secure_launch_enabled` key — the hyp config
   allow-list carries 14 unrelated entries
-  ([evidence](../evidence/devcfg-keys.txt))
+  ([evidence](../../evidence/devcfg-keys.txt))
 
 ## The key is parsed into a field nobody reads
 

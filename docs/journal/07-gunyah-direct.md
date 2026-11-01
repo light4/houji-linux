@@ -52,7 +52,7 @@ adb push gh /data/local/tmp/ && adb shell su -c 'chmod 755 /data/local/tmp/gh &&
 
 ## Observed
 
-[evidence](../evidence/gunyah-vm-start.txt): `VM: 45 status 2 complete`,
+[evidence](../../evidence/gunyah-vm-start.txt): `VM: 45 status 2 complete`,
 two `gh_proxy_sched` entries with VIRQs 406/407, `VM:45 started running`, and
 the calling thread parked inside `GH_VCPU_RUN`.
 

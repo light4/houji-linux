@@ -20,7 +20,7 @@ hypercall ABI (`docs/api/gunyah_api.md` in `quic/gunyah-hypervisor`,
 
 ## Result of `hvc #0x6000`
 
-[evidence](../evidence/probe-results.txt):
+[evidence](../../evidence/probe-results.txt):
 
 ```
 x0 = 0x00008001   API version 1, bit15 set => 64-bit ABI, variant 0
