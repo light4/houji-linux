@@ -16,8 +16,8 @@ fastboot flash boot   ~/playground/houji-gunyah-vm/baseline/boot_a_OS3.0.7.0_ori
 
 ## Firmware bundle
 
-A patched, re-signed `trustedvm` bundle is installed in
-`/vendor/firmware_mnt/image/`. It behaves like the stock one. To drop it:
+The device is on the **stock** `trustedvm` bundle (nothing patched is installed).
+If something was left behind from an experiment, drop it with:
 
 ```bash
 adb shell su -c 'mount -o rw,remount /vendor/firmware_mnt; rm /vendor/firmware_mnt/image/trustedvm.*'
@@ -25,8 +25,8 @@ adb shell su -c 'mount -o rw,remount /vendor/firmware_mnt; rm /vendor/firmware_m
 
 The loader then falls back to `/product/vm-system/trustedvm/boot/trustedvm`.
 
-Current device state: **stock `dtbo_a`** (the dtbo overlay turned out to be
-irrelevant, see `journal/19`), `boot_a` untouched.
+Current device state: **stock `dtbo_a`, stock `trustedvm` bundle**, `boot_a`
+untouched. (`/vendor/firmware_mnt` survives reboots; remove files there by hand.)
 
 ## If the phone dead-hangs
 

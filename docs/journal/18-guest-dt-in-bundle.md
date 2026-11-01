@@ -29,6 +29,10 @@ The guest's early boot writes to `hvc0`, so the console queue is the first thing
 that has to work; until then the guest is blind and the `gh_virt_wdt` resets the
 host a few seconds in.
 
+> **Correction (`journal/36`):** the nodes are the *guest* DT, but they do not
+> define what the host offers — the loader gets labels and `shmem_size` from the
+> hyp regardless of `b02` content.
+
 Two consequences:
 
 1. **The guest DT is editable by us.** `b02` is inside the signed bundle, and we

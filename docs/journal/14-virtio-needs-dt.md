@@ -38,6 +38,11 @@ Also confirmed by probe: `GH_WAIT_FOR_EVENT` on the **VM fd** returns `EINVAL`
 (events are delivered per backend fd), and creating a VM + firmware + 2 vCPUs
 works but yields no device.
 
+> **Superseded in part:** a dtbo overlay does declare the backends
+> (`journal/15`), but the loader ended up taking the device list from the
+> hyp/RM — writing, editing or removing those nodes in the bundle or in an
+> overlay changed nothing (`journal/19`, `journal/36`).
+
 ## What has to be added
 
 A dtbo overlay adding to the VM node:

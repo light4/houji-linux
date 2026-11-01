@@ -4,22 +4,26 @@ Getting a **custom** guest (Arch/NixOS-class, no proot) to run in a Gunyah VM on
 the Xiaomi 14. `/dev/kvm` is not part of this: it is closed on this firmware
 (see below), so the work targets Qualcomm's own hypervisor instead.
 
-Status: **host side done, guest side open.** Read
-[docs/STATE.md](docs/STATE.md), then [docs/ROADMAP.md](docs/ROADMAP.md).
+Status: **stopped at the guest's first instruction.** Read
+[docs/FINDINGS.md](docs/FINDINGS.md) for the one-page result and its honest
+boundary, [docs/STATE.md](docs/STATE.md) for exact current state, and
+[docs/ROADMAP.md](docs/ROADMAP.md) for what is left.
 
 ## Where it stands
 
 | path | state |
 |---|---|
-| vendor loader `/dev/qgunyah` | VM creates, firmware authenticates, both virtio backends arm, VM starts — **guest dies in under 0.5 s** |
+| vendor loader `/dev/qgunyah` | VM creates, firmware authenticates, backends arm, vCPU is entered and blocks — **guest never executes; the VM is torn down ~0.2 s later** |
 | crosvm / pVM `/dev/gunyah` | blocked: needs a vendor-signed pvmfw; `RM start` → `ENODEV` |
 | `/dev/kvm` | closed: EL2 belongs to Gunyah from XBL on |
 
-The vendor loader path is fully mapped: every ioctl, the guest DT inside the
-signed bundle, the label map (`0x11` console, `0x10` disk) and the vendor's own
-launcher (`/system_ext/bin/qcrosvm`) are documented. What is left is the guest
-side — a template guest DT that has to become real, and an ABI skew worth
-watching. Details: [docs/reference/qgunyah-abi.md](docs/reference/qgunyah-abi.md).
+The loader path is mapped in detail — every ioctl and its traps, the bundle and
+dtbo formats, the signing flow, the label map (`0x11` console, `0x10` disk) — and
+the vendor's own launcher is ruled out as a shortcut because it belongs to a newer
+driver generation than this ROM ships. What remains is inside the loader's start
+path or the hyp's VM template. Details:
+[docs/reference/qgunyah-abi.md](docs/reference/qgunyah-abi.md),
+[docs/FINDINGS.md](docs/FINDINGS.md).
 
 ## Why `/dev/kvm` is not the answer here
 
@@ -38,6 +42,9 @@ forcing `protected_vm.supported` only moves the failure to the missing
 `/dev/kvm` ([journal/06](docs/journal/06-avf-is-kvm-only.md)).
 
 ## Tripwires after a firmware update
+
+Any hit below re-opens the work; details in
+[docs/FINDINGS.md](docs/FINDINGS.md#tripwires-for-a-firmware-update).
 
 ```bash
 # Secure Launch / slbounce
@@ -59,6 +66,9 @@ src/gh_probe.c        drives /dev/qgunyah: create VM, firmware, vCPUs
 src/gh_virtio_probe.c backend sequence for one label
 src/gh_virtio_blk_probe.c  same, block device, two labels
 patch.py, run.sh      boot.img stub harvester
+tools/patch_b02.py    replace one guest-DT entry in a bundle
+tools/rebuild_bundle.py  re-assemble, sign and split a bundle
+docs/FINDINGS.md      one-page results and what is still unknown
 docs/STATE.md         current state and verified call sequence
 docs/ROADMAP.md       next moves and parked routes
 docs/RESTORE.md       rollback, stock hashes, dead-hang recovery

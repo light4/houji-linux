@@ -54,6 +54,11 @@ backend list from the signed bundle (`trustedvm.b02`), whose
 `virtio-mmio@N/memory { qcom,label, base }` nodes are exactly the devices that
 get "recognized". Our overlay was harmless but irrelevant.
 
+> **Correction (`journal/36`):** the *second* half is wrong — stripping every
+> virtio node out of all 22 `b02` entries (and cutting the table to one entry)
+> still yields "Recognized … label 11/10". The device list comes from the
+> hyp/RM, not from the bundle. The overlay conclusion still holds.
+
 Current device state: **stock dtbo**, nothing pending.
 
 ## Remaining problem

@@ -36,6 +36,9 @@ cannot influence it. Combined with `23` (guest dead in <0.5 s, hard reset)
 that narrows the failure to "the bundle's guest does not survive on this
 hyp/kernel combination", not to our ioctl sequence.
 
+> **Later:** the guest side was worked through `journal/25`–`39` without success;
+> see [FINDINGS](../FINDINGS.md) for where it ended.
+
 Practical consequence: our host-side work is effectively complete; the next
 meaningful moves are on the guest side (patch `trustedvm.b02` into a real DT and
 re-sign, or supply our own kernel + initramfs in the bundle) rather than more

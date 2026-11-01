@@ -1,7 +1,7 @@
 # Current state
 
-Updated after `journal/24`. Read with [ROADMAP](ROADMAP.md) and
-[RESTORE](RESTORE.md).
+Final state of this investigation (`journal/25`–`40`). Summary:
+[FINDINGS](FINDINGS.md). Rollback: [RESTORE](RESTORE.md).
 
 ## Where the work stands
 
@@ -10,11 +10,12 @@ without `/dev/kvm`. Two Gunyah paths exist:
 
 | path | state |
 |---|---|
-| vendor loader `/dev/qgunyah` | create VM, authenticate firmware, arm both virtio backends, start — **guest dies in <0.5 s** (hard reset, no panic) |
+| vendor loader `/dev/qgunyah` | create VM, authenticate firmware, arm backends, vCPU entered and blocked — **guest never executes, VM torn down ~0.2 s later** |
 | crosvm / pVM `/dev/gunyah` | blocked: no vendor pvmfw, `RM start` → `ENODEV` |
 
-Host-side work on the vendor path is **effectively complete**; the remaining
-failure is on the guest side (see [ROADMAP](ROADMAP.md)).
+Everything userspace can reach on this path is done and documented. The failure
+is host/hyp-side of that boundary; why the vCPU does not execute is not
+established (see [FINDINGS](FINDINGS.md) §6).
 
 ## Verified working
 
@@ -61,21 +62,21 @@ device-reset event the guest would produce first. Full table and traps:
 
 Re-signing a structurally modified `b02` authenticates
 (`VM: 45 status 2 complete`), so guest-side changes are practical:
-`tools/patch_b02.py` + `tools/rebuild_bundle.py`, see `journal/25`. A patched
-bundle is installed on the device right now; delete
-`/vendor/firmware_mnt/image/trustedvm.*` to fall back to the stock one.
+`tools/patch_b02.py` + `tools/rebuild_bundle.py`, see `journal/25`. The device is
+back on the **stock** bundle; deleting `/vendor/firmware_mnt/image/trustedvm.*` is
+what keeps it there.
+
+## Further facts
 
 * `/proc/vmkmsg` (`dmesg_dumper`) is the channel a guest uses to hand its kernel
   log to the host — present, but empty because the guest dies first
   (`journal/28`).
 * b02 entry 13 is confirmed to be the only variant matching this board, so patch
   experiments on it are meaningful (`journal/28`).
-
-* **the host flow is not the problem.** A stub guest (single `b .` instruction)
-  survives ~10 s where the vendor kernel dies in ~0.5 s — the vendor guest kills
-  itself, early, on its own (`journal/29`, corrected in `journal/30`).
-* an inert guest is eventually abandoned (~10 s), so something waits for
-  progress; that is separate from the 0.5 s kernel death.
+* **the guest kernel is not the problem.** A stub guest whose kernel is a single
+  `b .` instruction dies exactly like the vendor kernel (`journal/29`).
+* every variant dies ~0.2 s after `VCPU_RUN`; how long the *host* survives
+  depends only on `crash-fatal` (`journal/34`).
 * the backend eventfds (`irqfd`, `ioeventfd`) never fire and
   `GH_WAIT_FOR_EVENT` never returns: the driver sees no guest activity at all —
   so there is no evidence the guest ever executes an instruction
@@ -87,46 +88,34 @@ bundle is installed on the device right now; delete
   (`journal/32`).
 * **segment indices shift after signing**: `b02` is the kernel in a delivered
   bundle, `b01` is the hash block (`journal/30`).
-* the device is on the **stock** bundle again; the stub bundle lives in `/tmp`
-  (`outl/`, `signed_loop`, `comb_loop`).
-
-## Corrected: proxy scheduling is not the cause
-
-The only guest that runs on this device (`cpusys_vm`) runs without proxy
-scheduling, so it was a suspect. A controlled 3+3 run says it makes **no**
-difference: with `crash-fatal` removed the host survives either way, and the
-guest dies either way (`journal/33`, corrected in `journal/34`).
-
-The vCPU **never executes**, in any variant, ~0.2 s after `VCPU_RUN` — even with
-a one-instruction `b .` guest. Long host survival is not guest liveness.
+* `VCPU_RUN` **blocks** (verified with `timeout`: `RC=124`) — the vCPU is entered
+  and parked in the hypervisor; the VM is torn down a few seconds later while the
+  call is still blocked (`journal/37`).
+* segments are placed by `p_paddr` (guest IPA): `cpusys_vm` has
+  `p_paddr == memory base` for every load. `trustedvm`'s kernel has `p_paddr = 0`
+  and fixing it to `0x28800000` changed nothing by itself (`journal/38`), but the
+  convention should be kept in every future build.
+* a variant that mimics the working VM completely (no virtio vdevices, its
+  `vm-attrs`, `nokaslr`, kernel `p_paddr` = memory base) still dies in ~0.2 s
+  (`journal/39`). The reachable configuration space is exhausted; the remaining
+  differences are host/hyp-side or inside the vendor launcher.
+* the shipped launcher cannot run here: it asks for the reserved memory size
+  **before** `set_fw_name` (this driver wants it after) and its `-l` mode needs a
+  `/sys/kernel/load_guestvm_<vm>` that no module in this ROM provides
+  (`journal/40`). Our probe is the only working path, not a duplicate.
+* proxy scheduling was a suspect (the working VM does not use it) but a
+  controlled 3+3 run shows it makes no difference (`journal/33`, corrected in
+  `journal/34`). The vCPU never executes in any variant, ~0.2 s after
+  `VCPU_RUN` — long host survival is not guest liveness.
 
 ## The known-good VM, as a reference
 
 `cpusys_vm`'s own bundle sits in `/vendor/firmware_mnt/image/cpusys_vm.*`; its
 config segment is a plain FDT with `affinity = "pinned"`, extra `vm-attrs`
 (`no-shutdown`, `ras-error-handler`) and **no virtio backends at all**
-(`journal/35`). `pinned` changes nothing, so affinity is out — but the
-"no virtio at all" shape makes a backend-free `trustedvm` variant the cleanest
-next bisect step.
-
-* `VCPU_RUN` **blocks** (verified with `timeout`: `RC=124`) — the vCPU is entered
-  and parked in the hypervisor; the VM is torn down a few seconds later while the
-  call is still blocked (`journal/37`).
-
-* segments are placed by `p_paddr` (guest IPA): `cpusys_vm` has
-  `p_paddr == memory base` for every load. `trustedvm`'s kernel has `p_paddr = 0`
-  and fixing it to `0x28800000` changed nothing by itself (`journal/38`), but the
-  convention should be kept in every future build.
-
-* a variant that mimics the working VM completely (no virtio vdevices, its
-  `vm-attrs`, `nokaslr`, kernel `p_paddr` = memory base) still dies in ~0.2 s
-  (`journal/39`). The reachable configuration space is exhausted; the remaining
-  differences are host/hyp-side or inside the vendor launcher.
-
-* the shipped launcher cannot run here: it asks for the reserved memory size
-  **before** `set_fw_name` (this driver wants it after) and its `-l` mode needs a
-  `/sys/kernel/load_guestvm_<vm>` that no module in this ROM provides
-  (`journal/40`). Our probe is the only working path, not a duplicate.
+(`journal/35`). `pinned` changes nothing either; the "no virtio at all" shape was
+what made a backend-free variant the obvious next step — it did not help
+(`journal/39`).
 
 ## Tooling notes that save a round
 
