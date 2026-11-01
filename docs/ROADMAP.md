@@ -22,6 +22,11 @@ verification.
   side, not a panic (`journal/26`, `journal/27`).
 * watch `/proc/vmkmsg` as soon as a guest survives long enough to write to it
   (`journal/28`).
+* stub guest already proves the point (`journal/29`): make it touch the virtio
+  window (`ldr` of the magic at `0xda6f8000`), then loop — if that keeps the VM
+  alive the device is reachable and only the handshake is missing.
+* try arming **one** label only, to separate "any backend at all" from the setup
+  order.
 * bring our own guest image: a minimal aarch64 stub is enough to prove execution
   (it can write to `vmkmsg`, or just busy-loop past the current ~0.5 s), and it
   is on the way to the real goal anyway.

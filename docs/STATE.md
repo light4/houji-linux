@@ -68,6 +68,13 @@ bundle is installed on the device right now; delete
 * b02 entry 13 is confirmed to be the only variant matching this board, so patch
   experiments on it are meaningful (`journal/28`).
 
+* **the guest kernel is not the problem.** A guest whose kernel is a single
+  `b .` instruction dies in 0.5 s *only when backends are armed*; without them it
+  survives ~15 s (`journal/29`). Declaring the backends imposes a progress
+  requirement the guest cannot satisfy.
+* the device is on the **stock** bundle again; the stub bundle lives in `/tmp`
+  (`outl/`, `signed_loop`, `comb_loop`).
+
 ## Tooling notes that save a round
 
 * loader lifecycle logs are `dev_dbg`: re-enable with
