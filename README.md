@@ -1,28 +1,28 @@
-# houji (Xiaomi 14) — Gunyah VM research
+# houji-linux — Arch Linux / NixOS on the Xiaomi 14
 
-Getting a **custom** guest (Arch/NixOS-class, no proot) to run in a Gunyah VM on
-the Xiaomi 14. `/dev/kvm` is not part of this: it is closed on this firmware
-(see below), so the work targets Qualcomm's own hypervisor instead.
-
-Status: **blocked — no route runs custom code on this firmware.** Read
-[docs/FINDINGS.md](docs/FINDINGS.md) for the one-page result and its honest
-boundary, [docs/STATE.md](docs/STATE.md) for exact current state, and
-[docs/ROADMAP.md](docs/ROADMAP.md) for what is left, and
-[docs/OPTIONS.md](docs/OPTIONS.md) for the three ways forward (native Linux,
-chroot, unauthenticated VM).
+Research and tools for running a **custom Linux** (Arch Linux ARM, NixOS) on the
+Xiaomi 14 (houji, Snapdragon 8 Gen 3 / SM8650, HyperOS 3.0.7.0), without proot.
+It started as a hunt for `/dev/kvm`, went deep into Qualcomm's Gunyah hypervisor,
+and now compares three practical routes.
 
 ## Where it stands
 
-| path | state |
+| route | state |
 |---|---|
-| vendor loader `/dev/qgunyah` | works for vendor-signed VMs only; `qtestsign` re-signing is **rejected** (`VM_AUTH_IMAGE` -22) |
-| crosvm `/dev/gunyah` (own kernel) | RM rejects `VM_START` with `NORESOURCE`, protected or not |
-| `/dev/kvm` | closed: EL2 belongs to Gunyah from XBL on |
+| `/dev/kvm` | **closed**: EL2 belongs to Gunyah from XBL on |
+| VM on the vendor loader `/dev/qgunyah` | **closed for custom code**: only Xiaomi-signed VMs; `qtestsign` is rejected (`VM_AUTH_IMAGE` -22) |
+| unauthenticated VM on `/dev/gunyah` (crosvm, own kernel) | **blocked**: the Resource Manager refuses `VM_START` with `NORESOURCE` |
+| native Linux as the primary OS (LineageOS-style) | **open**: stock GKI 6.1 + vendor modules usable, kernel needs `DEVTMPFS`/`FHANDLE`/namespaces |
+| real chroot on the Android kernel | **works today**, not an independent system |
 
-The loader path is mapped in detail (ioctls, bundle/dtbo formats, labels), but
-every VM on it is authenticated against Xiaomi's root, and the unauthenticated
-crosvm path is refused by the Resource Manager. See
-[docs/FINDINGS.md](docs/FINDINGS.md).
+Start here:
+
+* [docs/OPTIONS.md](docs/OPTIONS.md) — the three ways forward, compared, with plans
+* [docs/FINDINGS.md](docs/FINDINGS.md) — one-page results of the virtualization work
+  and its honest boundary
+* [docs/STATE.md](docs/STATE.md) — exact current state, verified call sequences
+* [docs/RESTORE.md](docs/RESTORE.md) — rollback and stock hashes
+* [docs/README.md](docs/README.md) — full index, reference docs and the lab journal
 
 ## Why `/dev/kvm` is not the answer here
 
@@ -57,6 +57,14 @@ adb shell su -c 'ls /sys/kernel/load_guestvm_*'
 ## Layout
 
 ```
+docs/OPTIONS.md       three ways to run Arch/NixOS, compared
+docs/FINDINGS.md      one-page results of the virtualization work
+docs/STATE.md         current state and verified call sequences
+docs/ROADMAP.md       open question for the VM route (option 3)
+docs/RESTORE.md       rollback, stock hashes, dead-hang recovery
+docs/reference/       /dev/qgunyah ABI, bundle/dtbo formats, harness
+docs/journal/         chronological lab notebook (01–43)
+
 src/probe_stub.S      general SMCCC prober (returns to kmain on any error)
 src/ident.S           `hvc #0x6000` hypervisor_identify probe
 src/stub_scan2.S      64-FID bitmap scanner
@@ -64,18 +72,14 @@ src/stub_nop2.S       minimal "write a marker and return" stub
 src/gh_probe.c        drives /dev/qgunyah: create VM, firmware, vCPUs
 src/gh_virtio_probe.c backend sequence for one label
 src/gh_virtio_blk_probe.c  same, block device, two labels
+patch.py, run.sh      boot.img stub harness (splice a stub into boot_a, classify the boot)
+
+tools/run_tvm.py      install a trustedvm bundle, start it with stock qcrosvm, collect logs
 tools/qvirt_start.c   drive the stock vendor.qti.qvirt service (getVm/getState/start)
-tools/run_tvm.py      install a bundle, start it with stock qcrosvm, collect logs (permissive)
-patch.py, run.sh      boot.img stub harvester
 tools/patch_b02.py    replace one guest-DT entry in a bundle
-tools/rebuild_bundle.py  re-assemble, sign and split a bundle
-docs/FINDINGS.md      one-page results and what is still unknown
-docs/OPTIONS.md       three ways to run Arch/NixOS, compared
-docs/STATE.md         current state and verified call sequence
-docs/ROADMAP.md       next moves and parked routes
-docs/RESTORE.md       rollback, stock hashes, dead-hang recovery
-docs/reference/       ABI, bundle/dtbo formats, harness
-docs/journal/         chronological lab notebook
+tools/rebuild_bundle.py  re-assemble, qtestsign and split a bundle (structurally valid;
+                      the signature is rejected on this device)
+
 evidence/             raw probe output, partition greps
 ```
 
@@ -84,11 +88,11 @@ evidence/             raw probe output, partition greps
 
 ## Safety
 
-Only `boot_a` is ever flashed by the harness, and the rollback is the same
-one-line `fastboot flash boot`. A bad stub dead-hangs; the bootloader watchdog
+The harness only ever flashes `boot_a`; the virtualization experiments touched
+`dtbo_a` and files on `/vendor/firmware_mnt`. Every one of those has a stock backup
+and a one-line rollback in [docs/RESTORE.md](docs/RESTORE.md). A bad stub dead-hangs; the bootloader watchdog
 restores fastboot in ~2 min, or power-cycle and hold Vol-Down+Power.
 
 Read [the pitfalls](docs/journal/04-harness-pitfalls.md) before writing a stub:
 MMU-off unaligned access, BTI landing pads, `x0` = DTB, rodata write alignment.
 
-[qtestsign]: https://github.com/msm8916-mainline/qtestsign

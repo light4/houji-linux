@@ -6,7 +6,7 @@ are byte-identical backups.
 
 ```bash
 fastboot flash dtbo_a ~/Downloads/houji_backup/dtbo_a.img
-fastboot flash boot   ~/playground/houji-gunyah-vm/baseline/boot_a_OS3.0.7.0_orig.img
+fastboot flash boot   ~/playground/houji-linux/baseline/boot_a_OS3.0.7.0_orig.img
 ```
 
 | partition | stock sha256 |
