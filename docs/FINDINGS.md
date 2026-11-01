@@ -1,7 +1,9 @@
 # Findings — one page
 
 Everything below was verified on device (houji / 23127PN0CC, HyperOS 3.0.7.0,
-KernelSU). Numbers, commands and raw logs are in the journal; where an early
+KernelSU). The device matches the stock `OS3.0.7.0.WNCCNXM` fastboot ROM
+partition-for-partition, except KernelSU's `init_boot`
+([journal/41](journal/41-stock-launcher-same-failure.md)). Numbers, commands and raw logs are in the journal; where an early
 journal entry was later corrected, the correction is linked too.
 
 ## 1. `/dev/kvm` cannot be had on this firmware
@@ -33,7 +35,7 @@ missing `/dev/kvm` ([journal/06](journal/06-avf-is-kvm-only.md)).
   per label, `set_fw_name` before `0x8008B261`) are in
   [reference/qgunyah-abi](reference/qgunyah-abi.md).
 
-## 3. …and there the guest stops
+## 3. …and there `trustedvm` stops
 
 The vCPU is entered but **never makes progress**: no backend event ever fires, no
 fault is reported, `GH_GET_QUEUE_INFO` and `ACK_DRIVER_OK` are unimplemented, there
@@ -52,14 +54,17 @@ DT table, a full mimicry of the working VM's configuration ([journal/25](journal
 The device list does not even come from the bundle — it is decided by the hyp/RM
 ([journal/36](journal/36-backends-do-not-come-from-b02.md)).
 
-## 5. Why the vendor tooling cannot substitute
+## 5. The vendor launcher fails the same way
 
-`/system_ext/bin/qcrosvm` + `vendor.qti.qvirt-service_rs` are the vendor's
-launcher, but they belong to a **newer driver generation**: `qcrosvm` asks for the
-reserved memory size before setting the firmware name (this driver answers
-`EINVAL` then, `0` after), and its `-l` mode needs a
-`/sys/kernel/load_guestvm_<vm>` that no module in this ROM provides. It fails
-identically for the VM that does boot ([journal/40](journal/40-why-qcrosvm-cannot-run-here.md)).
+`/dev/qgunyah` is fine: the stock stack runs `cpusys_vm` from boot via
+`/system_ext/bin/qcrosvm --vm=cpusys_vm` (vCPU thread blocked in
+`gh_vcpu_ioctl`). For `trustedvm`, the stock on-demand start (Trusted UI →
+`vendor.qti.qvirt.IVirtualizationService`) fails earlier, because its system disk
+`/data/misc/vm-system/system.img` is absent on this ROM. Running `qcrosvm` by hand
+with the untouched bundle and both disks supplied reaches `started running` and the
+phone resets — **the same signature as our probe**
+([journal/41](journal/41-stock-launcher-same-failure.md), correcting
+[journal/40](journal/40-why-qcrosvm-cannot-run-here.md)).
 
 ## 6. Honest boundary
 
@@ -67,9 +72,11 @@ Established: the route, the ABI, the bundle formats, the signing story, the DT
 layout, the failure signature, and the fact that the failure is host/hyp-side of
 anything userspace can reach.
 
-**Not** established: *why* the vCPU does not execute. The remaining difference is
-inside the loader's start path or the hyp's VM template — reachable only with more
-kernel RE, a newer ROM, or both.
+**Not** established: *why* `trustedvm` dies. It is not our tooling (the vendor
+launcher fails identically) and not the `/dev/qgunyah` path (`cpusys_vm` runs).
+The most plausible cause is that `trustedvm` is a Trusted UI VM: it is lent real
+display/touch device ranges (`iomemory-ranges`, `gic-irq-ranges`) and is meant to
+start only after the TUI HAL has handed those over. Unproven.
 
 ## Tripwires for a firmware update
 

@@ -30,6 +30,11 @@ boot).
 * `/vendor/bin/vmmgr` is only the firmware *reporter* on this kernel
   (invoked by ueventd with `FIRMWARE=<name>`, prints the path, exits).
 
+> **Correction ([41](41-stock-launcher-same-failure.md)):** `qvirtmgr-vndr.json` does
+> contain a `trustedvm` entry (only the tail was read here), and `qcrosvm` does
+> work on this ROM — it runs `cpusys_vm` from boot. The `EINVAL` came from the
+> `--mem` option.
+
 ## Why this matters
 
 Reimplementing the sequence by hand got us to `started running` with a guest

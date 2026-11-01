@@ -33,6 +33,10 @@ host a few seconds in.
 > define what the host offers — the loader gets labels and `shmem_size` from the
 > hyp regardless of `b02` content.
 
+> **Correction ([41](41-stock-launcher-same-failure.md)):** per
+> `qvirtmgr-vndr.json` both labels are virtio-**block**: `0x10` the read-only
+> system disk, `0x11` the read-write persist disk. `0x11` is not `hvc0`.
+
 Two consequences:
 
 1. **The guest DT is editable by us.** `b02` is inside the signed bundle, and we

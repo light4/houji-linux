@@ -13,15 +13,15 @@ boundary, [docs/STATE.md](docs/STATE.md) for exact current state, and
 
 | path | state |
 |---|---|
-| vendor loader `/dev/qgunyah` | VM creates, firmware authenticates, backends arm, vCPU is entered and blocks — **guest never executes; the VM is torn down ~0.2 s later** |
+| vendor loader `/dev/qgunyah` | works (`cpusys_vm` runs on it); `trustedvm` authenticates and starts, then the phone resets — **with our probe and with the vendor launcher alike** |
 | crosvm / pVM `/dev/gunyah` | blocked: needs a vendor-signed pvmfw; `RM start` → `ENODEV` |
 | `/dev/kvm` | closed: EL2 belongs to Gunyah from XBL on |
 
 The loader path is mapped in detail — every ioctl and its traps, the bundle and
-dtbo formats, the signing flow, the label map (`0x11` console, `0x10` disk) — and
-the vendor's own launcher is ruled out as a shortcut because it belongs to a newer
-driver generation than this ROM ships. What remains is inside the loader's start
-path or the hyp's VM template. Details:
+dtbo formats, the signing flow, the label map (`0x10` system disk, `0x11` persist disk). The
+vendor's own launcher `qcrosvm` fails on `trustedvm` exactly like our probe, while
+the same driver runs `cpusys_vm` fine — so the limit is this VM on this ROM, not
+the tooling. Details:
 [docs/reference/qgunyah-abi.md](docs/reference/qgunyah-abi.md),
 [docs/FINDINGS.md](docs/FINDINGS.md).
 
@@ -65,6 +65,7 @@ src/stub_nop2.S       minimal "write a marker and return" stub
 src/gh_probe.c        drives /dev/qgunyah: create VM, firmware, vCPUs
 src/gh_virtio_probe.c backend sequence for one label
 src/gh_virtio_blk_probe.c  same, block device, two labels
+tools/qvirt_start.c   drive the stock vendor.qti.qvirt service (getVm/getState/start)
 patch.py, run.sh      boot.img stub harvester
 tools/patch_b02.py    replace one guest-DT entry in a bundle
 tools/rebuild_bundle.py  re-assemble, sign and split a bundle

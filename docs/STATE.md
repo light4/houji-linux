@@ -1,6 +1,6 @@
 # Current state
 
-Final state of this investigation (`journal/25`–`40`). Summary:
+State after `journal/41`. Summary:
 [FINDINGS](FINDINGS.md). Rollback: [RESTORE](RESTORE.md).
 
 ## Where the work stands
@@ -13,9 +13,11 @@ without `/dev/kvm`. Two Gunyah paths exist:
 | vendor loader `/dev/qgunyah` | create VM, authenticate firmware, arm backends, vCPU entered and blocked — **guest never executes, VM torn down ~0.2 s later** |
 | crosvm / pVM `/dev/gunyah` | blocked: no vendor pvmfw, `RM start` → `ENODEV` |
 
-Everything userspace can reach on this path is done and documented. The failure
-is host/hyp-side of that boundary; why the vCPU does not execute is not
-established (see [FINDINGS](FINDINGS.md) §6).
+**The vendor launcher fails identically** (`journal/41`): `qcrosvm` with the
+untouched bundle reaches `started running` and the phone resets — so the failure is
+not in our tool. `/dev/qgunyah` itself works: `cpusys_vm` runs from boot through
+`qcrosvm`. The ROM matches `~/Downloads/houji_rom` OS3.0.7.0 except KernelSU's
+`init_boot`.
 
 ## Verified working
 
@@ -41,10 +43,11 @@ device-reset event the guest would produce first. Full table and traps:
 
 ## Hard facts
 
-* labels are **hex**: `0x10` = disk (2 vqs), `0x11` = `hvc0` console (1 vq).
+* labels are **hex**: `0x10` = read-only system disk, `0x11` = read-write persist
+  disk — both virtio-block (`qvirtmgr-vndr.json`, `journal/41`).
 * the guest DT ships in the bundle as `trustedvm.b02` — a 22-entry **dtbo
   template** (`virtio-mmio@N/memory { qcom,label, base }`, no `reg`, no
-  `interrupts`), windows at `0xda6f8000` (console) / `0xda6fc000` (disk). Entry
+  `interrupts`), windows at `0xda6f8000` (label `0x11`) / `0xda6fc000` (label `0x10`). Entry
   13 is the only variant matching this board; the others are for other SoCs.
 * neither the dtbo overlay nor the bundle's guest DT drives the device list:
   stripping every virtio node from all 22 `b02` entries (and cutting the table to
@@ -55,9 +58,10 @@ device-reset event the guest would produce first. Full table and traps:
 * one VM per boot — every failed attempt leaks the 68 MB CMA region.
 * no `/dev/gh_virtio_backend_<label>` nodes exist; `qcrosvm` expects them
   (`journal/26`).
-* `trustedvm` is not in `/vendor/etc/qvirtmgr-vndr.json` and nothing on this ROM
-  ever starts it; the shipped launcher `/system_ext/bin/qcrosvm` targets a newer
-  ABI than this kernel (`0x4020B245` and the whole `0xBCxx` family are `EINVAL`).
+* `trustedvm` **is** in `/vendor/etc/qvirtmgr-vndr.json` (on demand, for Trusted
+  UI), but its system disk `/data/misc/vm-system/system.img` does not exist, so the
+  stock start fails — while the service still reports `RUNNING` (`journal/41`).
+  `0x4020B245` and the `0xBCxx` family are `EINVAL` here.
 
 ## Bundle patching is proven
 
@@ -98,10 +102,8 @@ what keeps it there.
   `vm-attrs`, `nokaslr`, kernel `p_paddr` = memory base) still dies in ~0.2 s
   (`journal/39`). The reachable configuration space is exhausted; the remaining
   differences are host/hyp-side or inside the vendor launcher.
-* the shipped launcher cannot run here: it asks for the reserved memory size
-  **before** `set_fw_name` (this driver wants it after) and its `-l` mode needs a
-  `/sys/kernel/load_guestvm_<vm>` that no module in this ROM provides
-  (`journal/40`). Our probe is the only working path, not a duplicate.
+* the shipped launcher `qcrosvm` **does** run here (it starts `cpusys_vm` at boot);
+  `journal/40`'s "cannot run" was caused by our `--mem` argument (`journal/41`).
 * proxy scheduling was a suspect (the working VM does not use it) but a
   controlled 3+3 run shows it makes no difference (`journal/33`, corrected in
   `journal/34`). The vCPU never executes in any variant, ~0.2 s after

@@ -41,9 +41,9 @@ later corrected. Where it disagrees with `reference/`, the reference wins.
 | [15](journal/15-dtbo-overlay-virtio.md) | dtbo overlay declares the backends (later found unnecessary) |
 | [16](journal/16-virtio-backend-sequence.md) | full backend sequence and its traps |
 | [17](journal/17-backend-up-guest-silent.md) | host armed, guest silent |
-| [18](journal/18-guest-dt-in-bundle.md) | guest DT ships in `trustedvm.b02`; label map (device list: see 36) |
+| [18](journal/18-guest-dt-in-bundle.md) | guest DT ships in `trustedvm.b02` (labels: see 41, device list: see 36) |
 | [19](journal/19-loader-state-visibility.md) | how to see the loader log; overlay is a red herring (device list: see 36) |
-| [20](journal/20-qcrosvm-is-the-reference.md) | `qcrosvm` is the vendor reference launcher |
+| [20](journal/20-qcrosvm-is-the-reference.md) | `qcrosvm` is the vendor reference launcher (corrected by 41) |
 | [21](journal/21-qcrosvm-ioctl-table.md) | its ioctl table, both ABI families |
 | [22](journal/22-guest-never-touches-the-window.md) | guest dies before virtio init |
 | [23](journal/23-guest-dies-in-300ms.md) | <0.5 s hard reset, ABI skew suspicion |
@@ -68,7 +68,8 @@ later corrected. Where it disagrees with `reference/`, the reference wins.
 | [37](journal/37-vcpu-run-blocks.md) | `VCPU_RUN` blocks: the vCPU is entered |
 | [38](journal/38-segments-are-placed-by-paddr.md) | segments are placed by `p_paddr` |
 | [39](journal/39-mimicking-the-working-vm.md) | full mimicry of the working VM still dies |
-| [40](journal/40-why-qcrosvm-cannot-run-here.md) | why the vendor launcher cannot run here |
+| [40](journal/40-why-qcrosvm-cannot-run-here.md) | ~~why the vendor launcher cannot run here~~ (wrong, see 41) |
+| [41](journal/41-stock-launcher-same-failure.md) | ROM matches stock; `cpusys_vm` runs via `qcrosvm`; vendor launcher fails on `trustedvm` like our probe |
 
 ### Harness
 

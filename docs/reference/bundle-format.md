@@ -34,7 +34,8 @@ per board variant. Entry 13 matches houji
 
 The entries are templates: `generate = "/virtio-mmio"`, `vqs-num`, `dma_base`,
 `peer-default`, and a `memory { qcom,label, base }` child — but **no `reg`, no
-`interrupts`**. `chosen.bootargs` carries `console=hvc0 loglevel=8`.
+`interrupts`**. `chosen.bootargs` carries `console=hvc0 loglevel=8` (hvc0 is the Gunyah RM console,
+not one of the virtio labels; `0x10`/`0x11` are block disks, `journal/41`).
 
 ## DTBO table layout (also applies to `dtbo` partition overlays)
 

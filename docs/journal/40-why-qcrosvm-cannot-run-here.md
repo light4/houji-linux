@@ -1,5 +1,10 @@
 # Why the vendor launcher cannot run on this ROM
 
+> **Wrong — see [41](41-stock-launcher-same-failure.md).** `qcrosvm` runs
+> `cpusys_vm` on this ROM (pid from boot). The abort below is caused by our
+> `--mem` argument and by `cpusys_vm` already running; without `--mem` it boots
+> `trustedvm` up to `started running` and fails exactly like our probe.
+
 `qcrosvm` aborts immediately on `Get reserved mem size failed (EINVAL)` — for
 `trustedvm` *and* for `cpusys_vm`, i.e. also for the VM that demonstrably boots on
 this device. So it is not about our bundle.
