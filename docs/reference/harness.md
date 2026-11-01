@@ -28,6 +28,18 @@ echo 'file *gunyah* +p' > /sys/kernel/debug/dynamic_debug/control
 
 Re-enable after **every** boot.
 
+## Persisting a host crash
+
+`mtdoops` is enabled (`printk.always_kmsg_dump=1`, oops on
+`/dev/block/by-name/oops`). After a panic/oops the tail of the kernel log can be
+read back with:
+
+```bash
+adb shell su -c 'dd if=/dev/block/by-name/oops bs=1M count=2 | strings -n 6 | less'
+```
+
+This is better than racing `dmesg`, and it works for any host-side crash.
+
 ## Kernel-side probes (boot stubs)
 
 `patch.py` hijacks the arm64 `Image` entry and splices a stub; results are

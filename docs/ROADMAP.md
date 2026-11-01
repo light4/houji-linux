@@ -18,9 +18,11 @@ verification.
 ## Concrete next moves
 
 * ~~`reg`/`interrupts` in `b02`~~ — done, no effect (`journal/25`).
-* next guest-side experiment: drop `crash-fatal` from `vm-attrs` so the host
-  survives a guest crash and the failure can be inspected, and/or drop
-  `console=hvc0` from `chosen.bootargs`.
+* ~~drop `crash-fatal`~~ — no effect, the reset is a hard reset from the hyp/SCM
+  side, not a panic (`journal/26`, `journal/27`).
+* give the guest an early channel that does not need virtio: the guest DT's
+  `dmesg-dump` (label `0x07`) or a `console=` target that exists before the
+  driver does.
 * finish the `GH_GET_QUEUE_INFO` layout — it is the only non-blocking progress
   signal, and `EINVAL` may just mean "not ready yet".
 * alternatively replace the bundle's kernel with our own and use an initramfs
