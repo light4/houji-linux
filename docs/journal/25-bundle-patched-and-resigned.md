@@ -3,6 +3,10 @@
 Follow-up to [24](24-no-boot-context-ioctl.md). The bundle internals turned out
 to be more interesting than the ioctls.
 
+> **Invalid ([42](42-patched-bundles-never-loaded.md)):** none of the patched
+> bundles in 25–39 was actually loaded (silent fallback to `/product`); when they
+> are, they fail authentication.
+
 ## What the bundle really contains
 
 `trustedvm.b02` is referenced by the guest config as `config_cpio = <0x02>` and

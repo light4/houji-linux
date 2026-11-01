@@ -35,7 +35,7 @@ later corrected. Where it disagrees with `reference/`, the reference wins.
 | | |
 |---|---|
 | [07](journal/07-gunyah-direct.md) | `/dev/qgunyah` drives a real VM |
-| [09](journal/09-custom-system.md) | test-signing: `qtestsign` is accepted |
+| [09](journal/09-custom-system.md) | ~~test-signing: `qtestsign` is accepted~~ (retracted, see 42) |
 | [10](journal/10-rom-inventory.md) | ROM inventory, where the bundle lives |
 | [14](journal/14-virtio-needs-dt.md) | a started guest has no devices without a DT (partly superseded) |
 | [15](journal/15-dtbo-overlay-virtio.md) | dtbo overlay declares the backends (later found unnecessary) |
@@ -49,7 +49,7 @@ later corrected. Where it disagrees with `reference/`, the reference wins.
 | [23](journal/23-guest-dies-in-300ms.md) | <0.5 s hard reset, ABI skew suspicion |
 | [24](journal/24-no-boot-context-ioctl.md) | no boot-context ioctl exists |
 
-### Guest side, bisecting, dead ends
+### Guest side, bisecting, dead ends (25–39 ran the stock bundle, see 42)
 
 | | |
 |---|---|
@@ -70,6 +70,7 @@ later corrected. Where it disagrees with `reference/`, the reference wins.
 | [39](journal/39-mimicking-the-working-vm.md) | full mimicry of the working VM still dies |
 | [40](journal/40-why-qcrosvm-cannot-run-here.md) | ~~why the vendor launcher cannot run here~~ (wrong, see 41) |
 | [41](journal/41-stock-launcher-same-failure.md) | ROM matches stock; `cpusys_vm` runs via `qcrosvm`; vendor launcher fails on `trustedvm` like our probe |
+| [42](journal/42-patched-bundles-never-loaded.md) | **patched bundles were never loaded; `qtestsign` is rejected** — invalidates 09, 25–39 |
 
 ### Harness
 

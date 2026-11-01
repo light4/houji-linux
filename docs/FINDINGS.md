@@ -21,19 +21,16 @@ AVF is additionally blocked because this build ships **no Gunyah backend**; it i
 crosvm-on-KVM, so flipping `protected_vm.supported` only moves the failure to the
 missing `/dev/kvm` ([journal/06](journal/06-avf-is-kvm-only.md)).
 
-## 2. The vendor loader route works up to the guest starting
+## 2. The vendor loader route cannot run custom code
 
-`/dev/qgunyah` drives a real Gunyah VM ([journal/07](journal/07-gunyah-direct.md)):
-
-* `GH_CREATE_VM`, `GH_VM_SET_FW_NAME("trustedvm")`, `GH_CREATE_VCPU`, backend arming
-  and `GH_VCPU_RUN` all work; the loader logs `VM:45 started running` and
-  `VCPU_RUN` blocks, so the vCPU really is entered ([journal/37](journal/37-vcpu-run-blocks.md)).
-* the SVM images are **test**-signed, and re-signing with `qtestsign` is accepted
-  — including structurally modified bundles ([journal/09](journal/09-custom-system.md), [journal/25](journal/25-bundle-patched-and-resigned.md)).
-  Signing is not the obstacle.
-* full backend ABI and its traps (labels are hex, `flags` must be 1, one `mmap`
-  per label, `set_fw_name` before `0x8008B261`) are in
-  [reference/qgunyah-abi](reference/qgunyah-abi.md).
+`/dev/qgunyah` drives real Gunyah VMs ([journal/07](journal/07-gunyah-direct.md)),
+and the stock stack uses it for `cpusys_vm`. But every VM on that path is a
+`secured` VM: its bundle is authenticated against Xiaomi's signing root.
+**`qtestsign` re-signing is rejected** (`VM_AUTH_IMAGE` -22) once the patched
+bundle is really loaded — earlier "accepted" results came from a silent fallback
+to the stock bundle under SELinux enforcing
+([journal/42](journal/42-patched-bundles-never-loaded.md), retracting
+[journal/09](journal/09-custom-system.md)).
 
 ## 3. …and there `trustedvm` stops
 
@@ -45,6 +42,10 @@ no panic — the reset comes from the hyp/RM, not a host panic ([journal/22](jou
 
 The same happens with a guest kernel that is a single `b .` instruction
 ([journal/29](journal/29-stub-guest-exonerates-the-kernel.md), corrected in [journal/34](journal/34-proxy-does-not-matter.md)), so it is not the vendor kernel.
+
+> Note: the experiments in §4 ran the stock bundle without our knowledge
+> ([journal/42](journal/42-patched-bundles-never-loaded.md)); they say nothing
+> about the patches themselves.
 
 ## 4. What was tried and did not help
 
@@ -66,17 +67,18 @@ phone resets — **the same signature as our probe**
 ([journal/41](journal/41-stock-launcher-same-failure.md), correcting
 [journal/40](journal/40-why-qcrosvm-cannot-run-here.md)).
 
-## 6. Honest boundary
+## 6. Where a custom OS could still come from
 
-Established: the route, the ABI, the bundle formats, the signing story, the DT
-layout, the failure signature, and the fact that the failure is host/hyp-side of
-anything userspace can reach.
+Only an **unauthenticated VM on `/dev/gunyah`** (mainline ABI, crosvm, own kernel)
+avoids the signature. On this ROM the Resource Manager rejects its `VM_START` with
+`NORESOURCE` (configure and init succeed), with or without pVM options, and the
+production hyp exposes no RM log to explain why
+([journal/42](journal/42-patched-bundles-never-loaded.md),
+[journal/11](journal/11-crosvm-pvmfw.md)).
 
-**Not** established: *why* `trustedvm` dies. It is not our tooling (the vendor
-launcher fails identically) and not the `/dev/qgunyah` path (`cpusys_vm` runs).
-The most plausible cause is that `trustedvm` is a Trusted UI VM: it is lent real
-display/touch device ranges (`iomemory-ranges`, `gic-irq-ranges`) and is meant to
-start only after the TUI HAL has handed those over. Unproven.
+So on this firmware: no `/dev/kvm`, no custom code in a secured VM, and the
+unauthenticated path refused by the RM. Proot-style containers are the only way to
+run Arch/NixOS userspace here today.
 
 ## Tripwires for a firmware update
 

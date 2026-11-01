@@ -1,6 +1,6 @@
 # Current state
 
-State after `journal/41`. Summary:
+State after `journal/42`. **Read journal/42 first: bundle experiments 25–39 never loaded the patched bundle, and `qtestsign` is rejected.** Summary:
 [FINDINGS](FINDINGS.md). Rollback: [RESTORE](RESTORE.md).
 
 ## Where the work stands
@@ -23,7 +23,7 @@ not in our tool. `/dev/qgunyah` itself works: `cpusys_vm` runs from boot through
 
 ```
 GH_CREATE_VM                        0xB201        -> vm fd
-GH_VM_SET_FW_NAME ("trustedvm")     0x4010B241    ok  (bundle must be signed; qtestsign passes)
+GH_VM_SET_FW_NAME ("trustedvm")     0x4010B241    ok  (vendor-signed bundle only; qtestsign → VM_AUTH_IMAGE -22)
 GH_GET_VCPU_COUNT                   0xB243        -> 2
 GH_VM_RESERVED_MEMORY_SIZE          0x8008B261    -> 0x108000
 GH_CREATE_VCPU (arg = index)        0xB240        ok
@@ -63,10 +63,11 @@ device-reset event the guest would produce first. Full table and traps:
   stock start fails — while the service still reports `RUNNING` (`journal/41`).
   `0x4020B245` and the `0xBCxx` family are `EINVAL` here.
 
-## Bundle patching is proven
+## Bundle patching does NOT work
 
-Re-signing a structurally modified `b02` authenticates
-(`VM: 45 status 2 complete`), so guest-side changes are practical:
+Re-signed bundles fail `VM_AUTH_IMAGE` once really loaded; the earlier "authenticates"
+was the stock bundle via silent fallback (`journal/42`). The tools still build valid
+MBN layouts:
 `tools/patch_b02.py` + `tools/rebuild_bundle.py`, see `journal/25`. The device is
 back on the **stock** bundle; deleting `/vendor/firmware_mnt/image/trustedvm.*` is
 what keeps it there.

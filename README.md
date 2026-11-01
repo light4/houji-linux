@@ -4,7 +4,7 @@ Getting a **custom** guest (Arch/NixOS-class, no proot) to run in a Gunyah VM on
 the Xiaomi 14. `/dev/kvm` is not part of this: it is closed on this firmware
 (see below), so the work targets Qualcomm's own hypervisor instead.
 
-Status: **stopped at the guest's first instruction.** Read
+Status: **blocked — no route runs custom code on this firmware.** Read
 [docs/FINDINGS.md](docs/FINDINGS.md) for the one-page result and its honest
 boundary, [docs/STATE.md](docs/STATE.md) for exact current state, and
 [docs/ROADMAP.md](docs/ROADMAP.md) for what is left.
@@ -13,16 +13,13 @@ boundary, [docs/STATE.md](docs/STATE.md) for exact current state, and
 
 | path | state |
 |---|---|
-| vendor loader `/dev/qgunyah` | works (`cpusys_vm` runs on it); `trustedvm` authenticates and starts, then the phone resets — **with our probe and with the vendor launcher alike** |
-| crosvm / pVM `/dev/gunyah` | blocked: needs a vendor-signed pvmfw; `RM start` → `ENODEV` |
+| vendor loader `/dev/qgunyah` | works for vendor-signed VMs only; `qtestsign` re-signing is **rejected** (`VM_AUTH_IMAGE` -22) |
+| crosvm `/dev/gunyah` (own kernel) | RM rejects `VM_START` with `NORESOURCE`, protected or not |
 | `/dev/kvm` | closed: EL2 belongs to Gunyah from XBL on |
 
-The loader path is mapped in detail — every ioctl and its traps, the bundle and
-dtbo formats, the signing flow, the label map (`0x10` system disk, `0x11` persist disk). The
-vendor's own launcher `qcrosvm` fails on `trustedvm` exactly like our probe, while
-the same driver runs `cpusys_vm` fine — so the limit is this VM on this ROM, not
-the tooling. Details:
-[docs/reference/qgunyah-abi.md](docs/reference/qgunyah-abi.md),
+The loader path is mapped in detail (ioctls, bundle/dtbo formats, labels), but
+every VM on it is authenticated against Xiaomi's root, and the unauthenticated
+crosvm path is refused by the Resource Manager. See
 [docs/FINDINGS.md](docs/FINDINGS.md).
 
 ## Why `/dev/kvm` is not the answer here
@@ -66,6 +63,7 @@ src/gh_probe.c        drives /dev/qgunyah: create VM, firmware, vCPUs
 src/gh_virtio_probe.c backend sequence for one label
 src/gh_virtio_blk_probe.c  same, block device, two labels
 tools/qvirt_start.c   drive the stock vendor.qti.qvirt service (getVm/getState/start)
+tools/run_tvm.py      install a bundle, start it with stock qcrosvm, collect logs (permissive)
 patch.py, run.sh      boot.img stub harvester
 tools/patch_b02.py    replace one guest-DT entry in a bundle
 tools/rebuild_bundle.py  re-assemble, sign and split a bundle

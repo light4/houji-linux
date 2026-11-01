@@ -5,6 +5,11 @@ dummy certificate chain passes `gh_rm_vm_auth_image` — including for content w
 modified ourselves. A custom guest is therefore an engineering problem, not a
 key problem.
 
+> **Retracted ([42](42-patched-bundles-never-loaded.md)):** the "accepted" result
+> was an artifact — with SELinux enforcing the loader fell back to the stock bundle
+> in `/product`. Actually loaded, a `qtestsign`-signed bundle fails
+> `VM_AUTH_IMAGE` (-22).
+
 ## Why this was expected to be impossible, and is not
 
 The signature segment (`trustedvm.b04`, flags `0x2000000`) carries a chain whose

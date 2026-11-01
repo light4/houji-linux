@@ -30,6 +30,14 @@ echo 'file *gunyah* +p' > /sys/kernel/debug/dynamic_debug/control
 
 Re-enable after **every** boot.
 
+## Delivering a bundle: SELinux and the silent fallback
+
+The loader's direct read of `/vendor/firmware_mnt/image/<vm>.*` fails with `-13`
+under SELinux enforcing and **silently falls back** to ueventd/`vmmgr`, which
+serves the stock bundle from `/product`. Always run with `setenforce 0` for the
+start (and restore it), and check dmesg for `failed with error -13` /
+`Falling back` — `tools/run_tvm.py` does both (`journal/42`).
+
 ## Persisting a host crash
 
 `mtdoops` is enabled (`printk.always_kmsg_dump=1`, oops on

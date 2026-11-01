@@ -5,27 +5,23 @@ either a newer ROM or kernel RE beyond the reach of userspace.
 
 ## The one open question
 
-**Why does `trustedvm` die right after `started running`?** It does so with our
-probe *and* with the vendor launcher (`journal/41`), while `cpusys_vm` runs on the
-same driver. Leading hypothesis: it needs the Trusted UI hand-off of display/touch
-(`iomemory-ranges`) before start.
+**Why does the RM refuse `VM_START` (`NORESOURCE`) for an unauthenticated crosvm
+VM on `/dev/gunyah`?** That path is the only one that can run our own kernel
+(`journal/42`). Configure and init succeed; start fails, with or without pVM
+options and vm-config overlays.
 
-Ruled out, each with a recorded experiment: guest kernel content (`journal/29`),
-`reg`/`interrupts` in the DT (`journal/25`), `crash-fatal` (`journal/26`),
-affinity proxy/pinned/none (`journal/33`, `journal/34`), a full mimicry of the
-working VM's configuration (`journal/39`), adding/removing devices in the bundle
-(`journal/36`), kernel `p_paddr` (`journal/38`), the overlay (`journal/19`).
+The vendor-loader (`/dev/qgunyah`) path is closed for custom code: bundles are
+authenticated against Xiaomi's root, `qtestsign` is rejected (`journal/42`).
 
 ## Next experiments on this ROM
 
-* start `trustedvm` the way the product does — through the Trusted UI flow
-  (`vendor.xiaomi.hardware.mitrustedui-service` → TUI HAL) — with
-  `/data/misc/vm-system/system.img` provided, and see whether the hand-off changes
-  the outcome;
-* strip `iomemory-ranges`/`gic-irq-ranges` from the guest config (re-signed
-  `b02`) so the VM no longer claims host devices;
-* or build a VM shaped like `cpusys_vm` (no lent devices) under a name the loader
-  accepts.
+* bisect crosvm's generated `gunyah-vm-config` against `cpusys_vm`'s working one
+  (vcpus `affinity`/`affinity-map`, memory base, vdevices) via
+  `--device-tree-overlay`, since the RM parses that node;
+* try `--cpus` / memory sizes / no virtio devices to see whether `NORESOURCE`
+  tracks a quota;
+* get an RM log: `/sys/kernel/debug/gunyah/hyp_uart_ctrl` and `/proc/tzdbg/hyp_log`
+  are present but silent on this production hyp.
 
 ## If kernel RE continues
 

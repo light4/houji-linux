@@ -1,5 +1,8 @@
 # A one-instruction guest: the kernel is innocent, the backend setup kills the VM
 
+> **Invalid ([42](42-patched-bundles-never-loaded.md)):** the stub bundle was never
+> loaded; the stock kernel ran every time.
+
 `vm-attrs`/`reg`/DT changes all did nothing, so the guest kernel itself was
 suspect. Replaced `b01` (the kernel segment) with four bytes of AArch64:
 
