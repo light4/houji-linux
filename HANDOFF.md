@@ -98,6 +98,14 @@ whole `0xBCxx` family are `EINVAL` here), and nothing on this ROM ever boots
 `trustedvm`. Next step in `docs/23`: enumerate the implemented `0xB2xx` numbers
 by probing the range and logging what is not `EINVAL`/`ENOTTY`.
 
+## `docs/24`
+
+Enumerated every raw ioctl in `0xB200`..`0xB2C0`: only `0xB243` exists besides
+create/create-vcpu/run. **No boot-context/DT ioctl**, so the guest entry state
+is hyp-side and userspace cannot fix it. Host-side work is effectively done;
+next moves belong on the guest side (patched, re-signed `trustedvm.b02`, or our
+own kernel + initramfs in the bundle).
+
 ## Next hypotheses (in order)
 
 1. find the feature bits the driver accepts for word 1 (`set_features 1/0x1e
