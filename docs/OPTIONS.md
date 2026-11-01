@@ -24,7 +24,7 @@ unchanged. It does not get `/dev/kvm` or custom secondary VMs either.
 |---|---|---|---|
 | hardware virtualization | no (still Gunyah's primary VM, owns EL1) | no (shares Android's kernel) | **yes** |
 | independent system | yes, own kernel and init | no, isolated userspace only | yes, own kernel |
-| doable today | yes, proven route | yes | **no** — RM rejects `VM_START` with `NOMEM` |
+| doable today | yes, proven route | yes | **no** — RM answers `NOMEM` to `VM_START`, every lever swept |
 | main difficulty | kernel config + hardware enablement | almost none | unknown cause, no RM log |
 | performance | native | native | near-native (virtio IO) |
 | hardware | see "drivers" below | no display/GPU of its own | virtio only: disk, net, serial; no GPU |
@@ -101,10 +101,15 @@ accepted, `VM_START` fails with **`NOMEM`** — hyp-side allocation, independent
 `--mem` (16 MB…1 GB), of optional devices and of doorbell count, even on a freshly
 booted device. `pinned`/`static` affinity fail earlier with `MAP_FAILED`, and
 `vm-attrs = "crash-fatal"` turns the reply into `BUSY`, so the config *is* parsed;
-the shortfall happens before attributes matter. Reading: the hyp's tables are
-sized for the VMs declared in its devcfg and an undeclared extra VM has no budget
-("PVM only variant", `hyp_extra_heap_size`). Not verifiable from the host — this
-build logs nothing. Bounded effort; otherwise wait for a firmware update.
+the shortfall happens before attributes matter. Every
+userspace lever was then swept — memory size, IPA base, vCPU count, VM name,
+affinity, attributes, optional devices, doorbell count, and stopping the only other
+running VM — all still `NOMEM` ([journal/45](journal/45-nomem-sweep.md)). Reading:
+the hyp's budgets live in the signed `hypvm*`/devcfg for the VMs declared there and
+this production build logs nothing.
+
+**Parked until a firmware update.** A newer hyp may change it; check the tripwires
+in [FINDINGS](FINDINGS.md) after any update.
 
 ## Recommendation
 

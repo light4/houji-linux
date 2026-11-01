@@ -14,7 +14,12 @@ options and vm-config overlays.
 The vendor-loader (`/dev/qgunyah`) path is closed for custom code: bundles are
 authenticated against Xiaomi's root, `qtestsign` is rejected (`journal/42`).
 
-## Next experiments on this ROM
+## Option 3: parked
+
+`NOMEM` survived every userspace lever (`journal/45`). Nothing further is testable
+from the host on this firmware.
+
+## Old notes on option 3
 
 * bisect crosvm's generated `gunyah-vm-config` against `cpusys_vm`'s working one
   (vcpus `affinity`/`affinity-map`, memory base, vdevices) via
