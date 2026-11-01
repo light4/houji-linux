@@ -97,6 +97,15 @@ guest dies either way (`journal/33`, corrected in `journal/34`).
 The vCPU **never executes**, in any variant, ~0.2 s after `VCPU_RUN` — even with
 a one-instruction `b .` guest. Long host survival is not guest liveness.
 
+## The known-good VM, as a reference
+
+`cpusys_vm`'s own bundle sits in `/vendor/firmware_mnt/image/cpusys_vm.*`; its
+config segment is a plain FDT with `affinity = "pinned"`, extra `vm-attrs`
+(`no-shutdown`, `ras-error-handler`) and **no virtio backends at all**
+(`journal/35`). `pinned` changes nothing, so affinity is out — but the
+"no virtio at all" shape makes a backend-free `trustedvm` variant the cleanest
+next bisect step.
+
 ## Tooling notes that save a round
 
 * loader lifecycle logs are `dev_dbg`: re-enable with
