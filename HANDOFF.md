@@ -82,6 +82,14 @@ legacy family. Two steps in its order were missing from our tool: `0xB245`
 (get vcpu count) and `0x8008B261` returning the *reserved memory size* (we got
 `0` and ignored it while hardcoding 2 vCPUs).
 
+## `docs/22`
+
+Log ends at `started running`; the guest never resets its device, so it dies
+before virtio init. `base 0 size 4096` is the not-yet-mapped userspace address,
+not a missing window. `0x8008B261` really returns `0x108000` (reserved memory)
+and `0xB243` returns the vcpu count (`2`); `qcrosvm`'s `0x4020B245` is
+unsupported here.
+
 ## Next hypotheses (in order)
 
 1. find the feature bits the driver accepts for word 1 (`set_features 1/0x1e
