@@ -62,3 +62,19 @@ misc gunyah: Failed to start VM: -19
 crosvm's generated `gunyah-vm-config` (with or without `compatible`/`vm-type`
 added by overlay) does not change it. Diagnosing it needs the RM's own log, which
 this production hyp does not expose (`/proc/tzdbg/hyp_log` is empty).
+
+## First bisect of the crosvm `NORESOURCE`
+
+The RM does parse crosvm's `gunyah-vm-config` (overlays applied with
+`--device-tree-overlay` change the outcome):
+
+| `vcpus` in the overlay | result |
+|---|---|
+| default (`affinity = "proxy"`, no map) | init OK, `VM_START` → `NORESOURCE` |
+| `affinity = "proxy"; affinity-map = <0x05>` | same |
+| `affinity = "pinned"` or `"static"`, map `<0x00>` | `VM_INIT` (`0x5600000b`) rejected, error 10 |
+
+Dropping balloon/rng/usb/pmu (`--no-*`) changes nothing; crosvm still emits ten
+doorbell vdevices. The start failure is not in the vCPU affinity and not in the
+optional devices; memory lending (crosvm lends host user pages, the working VMs
+use carve-outs) is the next suspect.
