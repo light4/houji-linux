@@ -48,6 +48,8 @@ device-reset event the guest would produce first. Full table and traps:
   the backends from the bundle. Stock `dtbo_a` is the safe state.
 * there is **no boot-context ioctl**: guest entry state is hyp-side.
 * one VM per boot — every failed attempt leaks the 68 MB CMA region.
+* no `/dev/gh_virtio_backend_<label>` nodes exist; `qcrosvm` expects them
+  (`journal/26`).
 * `trustedvm` is not in `/vendor/etc/qvirtmgr-vndr.json` and nothing on this ROM
   ever starts it; the shipped launcher `/system_ext/bin/qcrosvm` targets a newer
   ABI than this kernel (`0x4020B245` and the whole `0xBCxx` family are `EINVAL`).

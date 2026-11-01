@@ -14,6 +14,17 @@ fastboot flash boot   ~/playground/houji-gunyah-vm/baseline/boot_a_OS3.0.7.0_ori
 | `dtbo_a` | `6264b8e66e2e7720e9f593f93f9b7390ccbe5675c04d15c0c13abf1ff327456b` |
 | `boot_a` | `c88537b854911c142a920989865b663a5b7e0b3faab7025a7858b7a7adddafa9` |
 
+## Firmware bundle
+
+A patched, re-signed `trustedvm` bundle is installed in
+`/vendor/firmware_mnt/image/`. It behaves like the stock one. To drop it:
+
+```bash
+adb shell su -c 'mount -o rw,remount /vendor/firmware_mnt; rm /vendor/firmware_mnt/image/trustedvm.*'
+```
+
+The loader then falls back to `/product/vm-system/trustedvm/boot/trustedvm`.
+
 Current device state: **stock `dtbo_a`** (the dtbo overlay turned out to be
 irrelevant, see `journal/19`), `boot_a` untouched.
 
