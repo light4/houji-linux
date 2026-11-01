@@ -51,7 +51,13 @@ adb shell su -c 'ls /sys/kernel/load_guestvm_*'
 ## Layout
 
 ```
-src/                  freestanding probes: SMCCC stubs, /dev/qgunyah drivers
+src/probe_stub.S      general SMCCC prober (returns to kmain on any error)
+src/ident.S           `hvc #0x6000` hypervisor_identify probe
+src/stub_scan2.S      64-FID bitmap scanner
+src/stub_nop2.S       minimal "write a marker and return" stub
+src/gh_probe.c        drives /dev/qgunyah: create VM, firmware, vCPUs
+src/gh_virtio_probe.c backend sequence for one label
+src/gh_virtio_blk_probe.c  same, block device, two labels
 patch.py, run.sh      boot.img stub harvester
 docs/STATE.md         current state and verified call sequence
 docs/ROADMAP.md       next moves and parked routes
