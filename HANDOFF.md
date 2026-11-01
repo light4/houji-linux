@@ -65,6 +65,15 @@ GH_VCPU_RUN                       0xB280        blocks
 * capture the loader log with `dmesg -w > file &` **plus**
   `while true; do sync; done`, otherwise nothing survives the reset.
 
+## Key asset: `/system_ext/bin/qcrosvm` (see `docs/20`)
+
+The vendor's Rust launcher is on the phone and is the reference implementation
+(`/dev/qgunyah`, `/dev/gh_virtio_backend_<label>`,
+`/sys/kernel/load_guestvm_<vm>/boot_guestvm`). Use it as an oracle or launcher.
+`qcrosvm -l` exits 1 (no sysfs dir on this ROM); without `-l` it dies at
+"Get reserved mem size" `EINVAL`. `trustedvm` is not in
+`/vendor/etc/qvirtmgr-vndr.json`, so nothing auto-starts it.
+
 ## Next hypotheses (in order)
 
 1. find the feature bits the driver accepts for word 1 (`set_features 1/0x1e
