@@ -48,6 +48,12 @@ verification.
   first after any update.
 * only after a console exists: rootfs, then the `gh_virt_wdt` keep-alive.
 
+## Build conventions from the working bundle
+
+`cpusys_vm.mdt` shows what the loader expects (`journal/38`): `p_paddr` = the
+guest memory base, 2 MB-aligned segment offsets, `PT_LOAD` flags `0x6`. Keep
+that when constructing bundles, even though it is not sufficient on its own.
+
 ## Parked
 
 * crosvm / pVM route: needs a vendor-signed pvmfw; parked until one appears

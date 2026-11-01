@@ -113,6 +113,11 @@ next bisect step.
   and parked in the hypervisor; the VM is torn down a few seconds later while the
   call is still blocked (`journal/37`).
 
+* segments are placed by `p_paddr` (guest IPA): `cpusys_vm` has
+  `p_paddr == memory base` for every load. `trustedvm`'s kernel has `p_paddr = 0`
+  and fixing it to `0x28800000` changed nothing by itself (`journal/38`), but the
+  convention should be kept in every future build.
+
 ## Tooling notes that save a round
 
 * loader lifecycle logs are `dev_dbg`: re-enable with
