@@ -90,6 +90,14 @@ not a missing window. `0x8008B261` really returns `0x108000` (reserved memory)
 and `0xB243` returns the vcpu count (`2`); `qcrosvm`'s `0x4020B245` is
 unsupported here.
 
+## `docs/23`
+
+Guest is gone in <0.5 s with **no panic output** (hard reset = triple fault). The
+shipped launcher targets a newer ABI than this kernel (its `0x4020B245` and the
+whole `0xBCxx` family are `EINVAL` here), and nothing on this ROM ever boots
+`trustedvm`. Next step in `docs/23`: enumerate the implemented `0xB2xx` numbers
+by probing the range and logging what is not `EINVAL`/`ENOTTY`.
+
 ## Next hypotheses (in order)
 
 1. find the feature bits the driver accepts for word 1 (`set_features 1/0x1e
