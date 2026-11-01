@@ -59,6 +59,35 @@ Remaining candidates, roughly in order of likelihood:
   after the guest boots, which cannot happen before start — need to confirm the
   actual start trigger in the driver's state machine
 
+## Per-label mappings
+
+The shared buffer is mapped **per label**: `mmap(shm_size, RW, SHARED, vm,
+offset = label << 12)` succeeds and yields a distinct address per device
+(`0x71820fc000` for label 16, `0x7181ff4000` for label 17 in one run). A single
+`mmap` with offset 0 only covers the first backend.
+
+Tried without changing the outcome: `shared-buffers-size` 0x4000 instead of
+0x108000.
+
+## Where it stands
+
+Everything returns success, both vCPUs exist, both windows are mapped — and the
+guest still faults (host reset) within about a second of `VCPU_RUN`, with no
+event on either label. Since declaring the backends the loader never logs
+`started running`, so the VM's start is gated on something we still do not
+satisfy.
+
+Next ideas, roughly in order:
+
+1. `GH_ACK_DRIVER_OK` for the console before start (it takes just the label as
+   `__u32`, so it can be pre-set)
+2. `virq` wiring: the guest's `interrupts` in its DT must correspond to what the
+   hyp assigns; our host child nodes carry no interrupt information and the
+   driver has no `interrupts` string, so the mapping presumably comes from the
+   hyp — worth confirming by dumping the guest DT's `interrupts` for both nodes
+3. temporarily strip `console=hvc0` from `chosen.bootargs` in `b02` (re-sign) so
+   the guest does not depend on a working console to get anywhere
+
 ## Operating notes
 
 * the loader's VM lifecycle lines are `dev_dbg`: re-enable
