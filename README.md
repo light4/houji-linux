@@ -1,3 +1,5 @@
+**Continue from [`HANDOFF.md`](HANDOFF.md)** — current state, verified call sequence, rollback commands, next hypotheses.
+
 # Xiaomi 14 (houji) — EL2 / `/dev/kvm` research
 
 Why this repo exists: to stop the next person (likely future me) from
