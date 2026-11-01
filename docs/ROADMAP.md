@@ -34,7 +34,7 @@ authenticated against Xiaomi's root, `qtestsign` is rejected (`journal/42`).
 
 ## If a newer ROM arrives
 
-Work the tripwires first (root README): `mssecapp` in `hyp_a`, Gunyah in the AVF
+Work the tripwires first ([FINDINGS](FINDINGS.md#tripwires-for-a-firmware-update)): `mssecapp` in `hyp_a`, Gunyah in the AVF
 APEX, `/sys/kernel/load_guestvm_*`. Then, in order:
 
 1. re-check the ABI: `0x4020B245` and the `0xBCxx` family should stop answering
