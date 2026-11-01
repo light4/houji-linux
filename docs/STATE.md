@@ -62,6 +62,12 @@ Re-signing a structurally modified `b02` authenticates
 bundle is installed on the device right now; delete
 `/vendor/firmware_mnt/image/trustedvm.*` to fall back to the stock one.
 
+* `/proc/vmkmsg` (`dmesg_dumper`) is the channel a guest uses to hand its kernel
+  log to the host — present, but empty because the guest dies first
+  (`journal/28`).
+* b02 entry 13 is confirmed to be the only variant matching this board, so patch
+  experiments on it are meaningful (`journal/28`).
+
 ## Tooling notes that save a round
 
 * loader lifecycle logs are `dev_dbg`: re-enable with

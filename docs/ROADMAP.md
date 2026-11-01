@@ -20,9 +20,11 @@ verification.
 * ~~`reg`/`interrupts` in `b02`~~ — done, no effect (`journal/25`).
 * ~~drop `crash-fatal`~~ — no effect, the reset is a hard reset from the hyp/SCM
   side, not a panic (`journal/26`, `journal/27`).
-* give the guest an early channel that does not need virtio: the guest DT's
-  `dmesg-dump` (label `0x07`) or a `console=` target that exists before the
-  driver does.
+* watch `/proc/vmkmsg` as soon as a guest survives long enough to write to it
+  (`journal/28`).
+* bring our own guest image: a minimal aarch64 stub is enough to prove execution
+  (it can write to `vmkmsg`, or just busy-loop past the current ~0.5 s), and it
+  is on the way to the real goal anyway.
 * finish the `GH_GET_QUEUE_INFO` layout — it is the only non-blocking progress
   signal, and `EINVAL` may just mean "not ready yet".
 * alternatively replace the bundle's kernel with our own and use an initramfs
