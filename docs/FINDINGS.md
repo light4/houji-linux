@@ -71,10 +71,12 @@ phone resets — **the same signature as our probe**
 
 Only an **unauthenticated VM on `/dev/gunyah`** (mainline ABI, crosvm, own kernel)
 avoids the signature. On this ROM the Resource Manager rejects its `VM_START` with
-`NOMEM` (configure and init succeed), with or without pVM options, and the
-production hyp exposes no RM log to explain why
-([journal/42](journal/42-patched-bundles-never-loaded.md),
-[journal/11](journal/11-crosvm-pvmfw.md)).
+`NOMEM` (configure and init succeed). Memory size, IPA base, vCPU count, VM name,
+`vm-attrs`, optional devices, doorbell count and stopping the only other VM all
+leave it unchanged ([journal/45](journal/45-nomem-sweep.md),
+[journal/42](journal/42-patched-bundles-never-loaded.md)); the budgets live in the
+signed `hypvm*`/devcfg and this production hyp logs nothing. Parked until a
+firmware update.
 
 So on this firmware: no `/dev/kvm`, no custom code in a secured VM, and the
 unauthenticated path refused by the RM. Proot-style containers are the only way to
