@@ -44,7 +44,8 @@ device-reset event the guest would produce first. Full table and traps:
 * labels are **hex**: `0x10` = disk (2 vqs), `0x11` = `hvc0` console (1 vq).
 * the guest DT ships in the bundle as `trustedvm.b02` — a 22-entry **dtbo
   template** (`virtio-mmio@N/memory { qcom,label, base }`, no `reg`, no
-  `interrupts`), windows at `0xda6f8000` (console) / `0xda6fc000` (disk).
+  `interrupts`), windows at `0xda6f8000` (console) / `0xda6fc000` (disk). Entry
+  13 is the only variant matching this board; the others are for other SoCs.
 * neither the dtbo overlay nor the bundle's guest DT drives the device list:
   stripping every virtio node from all 22 `b02` entries (and cutting the table to
   one entry) still yields `Recognized virtio backend device with label 10/11`.
@@ -71,8 +72,6 @@ what keeps it there.
 * `/proc/vmkmsg` (`dmesg_dumper`) is the channel a guest uses to hand its kernel
   log to the host — present, but empty because the guest dies first
   (`journal/28`).
-* b02 entry 13 is confirmed to be the only variant matching this board, so patch
-  experiments on it are meaningful (`journal/28`).
 * **the guest kernel is not the problem.** A stub guest whose kernel is a single
   `b .` instruction dies exactly like the vendor kernel (`journal/29`).
 * every variant dies ~0.2 s after `VCPU_RUN`; how long the *host* survives
