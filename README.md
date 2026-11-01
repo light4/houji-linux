@@ -140,3 +140,8 @@ The virtio backends are now declared with a **dtbo overlay** and the driver pick
 them up (`Recognized virtio backend device with label 10/11`,
 `shmem_size 108000`); the overlay's format traps and rollback command are in
 [15](docs/15-dtbo-overlay-virtio.md).
+
+The whole backend setup path now works (`ack_reset` → features → queue max →
+mmap → `irqfd`/`ioeventfd` → wait), with three traps recorded — `flags` must be
+1, labels are hex, and every label has to be declared — see
+[16](docs/16-virtio-backend-sequence.md).
