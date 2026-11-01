@@ -54,6 +54,13 @@ verification.
 guest memory base, 2 MB-aligned segment offsets, `PT_LOAD` flags `0x6`. Keep
 that when constructing bundles, even though it is not sufficient on its own.
 
+## Decisive test left
+
+Get **`qcrosvm`** to boot `trustedvm` (its `-l` mode needs
+`/sys/kernel/load_guestvm_<vm>`, which the loader creates only in that mode). If
+the vendor launcher fails the same way, this ROM/hyp pair is the limit rather
+than our code.
+
 ## Parked
 
 * crosvm / pVM route: needs a vendor-signed pvmfw; parked until one appears

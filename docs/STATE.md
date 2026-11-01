@@ -118,6 +118,11 @@ next bisect step.
   and fixing it to `0x28800000` changed nothing by itself (`journal/38`), but the
   convention should be kept in every future build.
 
+* a variant that mimics the working VM completely (no virtio vdevices, its
+  `vm-attrs`, `nokaslr`, kernel `p_paddr` = memory base) still dies in ~0.2 s
+  (`journal/39`). The reachable configuration space is exhausted; the remaining
+  differences are host/hyp-side or inside the vendor launcher.
+
 ## Tooling notes that save a round
 
 * loader lifecycle logs are `dev_dbg`: re-enable with
