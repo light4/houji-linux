@@ -56,6 +56,13 @@ Driving that service directly (`tools/qvirt_start.c`: `getVm` = code 1,
 
 * the service spawns `qcrosvm` for `trustedvm`, which exits with status 1 within
   2 s — `/data/misc/vm-system/system.img` **does not exist** on this ROM;
+  (this is the *guest's* root disk, not Android's `system.img`: the guest kernel's
+  `verity.cmdline` in `b03` expects `/dev/vda` with 270336 sectors ≈ 132 MiB of
+  data and a fixed root hash. No such image exists anywhere — not among the ROM's
+  fastboot images, not as a logical partition in `super`, not as any file
+  >100 MB on `system`/`vendor`/`product`/`system_ext`/`odm`/`mi_ext`/`cust`;
+  `/product/vm-system` is the `vm-bootsys` partition and holds only the boot
+  bundle, `/data/misc/vm-system/` is empty);
 * the service nevertheless reports `RUNNING` (`vendor.qvirtmgr.trustedvm.status`)
   — its state is bookkeeping, not a liveness check.
 
