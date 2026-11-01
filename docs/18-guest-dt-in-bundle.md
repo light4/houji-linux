@@ -38,6 +38,34 @@ Two consequences:
 2. Features / queue max / reset have to be prepared **for both labels**; leaving
    the console unconfigured stalls the guest at its first print.
 
+## Regression to know about
+
+With the backends declared, the loader no longer logs `VM:45 started running`
+and `VCPU_RUN` blocks forever — whereas without any backend the VM did start and
+reset after a few seconds. So **start is gated on backend readiness**, and our
+setup is still incomplete somewhere.
+
+Tried without effect: per-queue `GH_SET_QUEUE_NUM_MAX`/`GH_IOEVENTFD` for both
+disk queues (the disk has 2 vqs), and `GH_SET_DEVICE_CONFIG_DATA` with size 0 for
+the console.
+
+Remaining candidates, roughly in order of likelihood:
+
+* console features: a multiplort `hvc0` needs `VIRTIO_CONSOLE_F_MULTIPORT`; we
+  set only `VIRTIO_F_VERSION_1`
+* ordering: maybe `GH_ACK_RESET` has to follow the `mmap`, or `queue_ready` from
+  `GH_GET_QUEUE_INFO` has to be polled before start proceeds
+* the host is expected to read `GH_GET_DRIVER_FEATURES`/`GH_GET_DRIVER_CONFIG_DATA`
+  after the guest boots, which cannot happen before start — need to confirm the
+  actual start trigger in the driver's state machine
+
+## Operating notes
+
+* the loader's VM lifecycle lines are `dev_dbg`: re-enable
+  `file *gunyah* +p` after **every** boot
+* the watchdog resets ~5 s in, so dmesg has to be sampled within ~4 s; anything
+  read afterwards comes from the next boot
+
 ## Current status
 
 Host side armed for both labels (ack_reset, features, queue max, mmap,
