@@ -68,10 +68,13 @@ bundle is installed on the device right now; delete
 * b02 entry 13 is confirmed to be the only variant matching this board, so patch
   experiments on it are meaningful (`journal/28`).
 
-* **the guest kernel is not the problem.** A guest whose kernel is a single
-  `b .` instruction dies in 0.5 s *only when backends are armed*; without them it
-  survives ~15 s (`journal/29`). Declaring the backends imposes a progress
-  requirement the guest cannot satisfy.
+* **the host flow is not the problem.** A stub guest (single `b .` instruction)
+  survives ~10 s where the vendor kernel dies in ~0.5 s — the vendor guest kills
+  itself, early, on its own (`journal/29`, corrected in `journal/30`).
+* an inert guest is eventually abandoned (~10 s), so something waits for
+  progress; that is separate from the 0.5 s kernel death.
+* **segment indices shift after signing**: `b02` is the kernel in a delivered
+  bundle, `b01` is the hash block (`journal/30`).
 * the device is on the **stock** bundle again; the stub bundle lives in `/tmp`
   (`outl/`, `signed_loop`, `comb_loop`).
 

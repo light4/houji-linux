@@ -14,6 +14,9 @@ Padded to the original length, re-signed, installed.
 | stub guest, **no** backends armed (create → firmware → vcpus → run) | host alive at 8 s, died later (~15 s) |
 | stub guest **with** backend setup | host dies in ~0.5 s, exactly as with the real kernel |
 
+> Timings corrected in [30](30-stub-timings-corrected.md): an inert stub actually
+> survives ~10 s; only the vendor kernel dies in 0.5 s.
+
 So the vendor kernel, its DT, `reg`, `interrupts` and `vm-attrs` are all
 irrelevant to the fast reset. **Declaring the virtio backends is what kills the
 VM**: the moment they exist, the loader/VM aborts within half a second, while
