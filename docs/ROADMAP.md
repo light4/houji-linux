@@ -17,10 +17,12 @@ verification.
 
 ## Concrete next moves
 
-* patch `trustedvm.b02` into a static guest DT: give both `virtio-mmio` nodes
-  real `reg` and `interrupts`, and drop `console=hvc0` from `chosen.bootargs`
-  while at it. The bundle container and re-sign flow are in
-  [reference/bundle-format](reference/bundle-format.md).
+* ~~`reg`/`interrupts` in `b02`~~ — done, no effect (`journal/25`).
+* next guest-side experiment: drop `crash-fatal` from `vm-attrs` so the host
+  survives a guest crash and the failure can be inspected, and/or drop
+  `console=hvc0` from `chosen.bootargs`.
+* finish the `GH_GET_QUEUE_INFO` layout — it is the only non-blocking progress
+  signal, and `EINVAL` may just mean "not ready yet".
 * alternatively replace the bundle's kernel with our own and use an initramfs
   that prints over `hvc0` regardless of what else is missing.
 * keep `qcrosvm` as the oracle: if a newer ROM ships, its ABI (`0xBCxx`,

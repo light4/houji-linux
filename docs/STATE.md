@@ -52,6 +52,14 @@ device-reset event the guest would produce first. Full table and traps:
   ever starts it; the shipped launcher `/system_ext/bin/qcrosvm` targets a newer
   ABI than this kernel (`0x4020B245` and the whole `0xBCxx` family are `EINVAL`).
 
+## Bundle patching is proven
+
+Re-signing a structurally modified `b02` authenticates
+(`VM: 45 status 2 complete`), so guest-side changes are practical:
+`tools/patch_b02.py` + `tools/rebuild_bundle.py`, see `journal/25`. A patched
+bundle is installed on the device right now; delete
+`/vendor/firmware_mnt/image/trustedvm.*` to fall back to the stock one.
+
 ## Tooling notes that save a round
 
 * loader lifecycle logs are `dev_dbg`: re-enable with
