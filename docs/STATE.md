@@ -87,12 +87,15 @@ bundle is installed on the device right now; delete
 * the device is on the **stock** bundle again; the stub bundle lives in `/tmp`
   (`outl/`, `signed_loop`, `comb_loop`).
 
-## Prime suspect: proxy scheduling
+## Corrected: proxy scheduling is not the cause
 
-The only guest that runs on this device (`cpusys_vm`) runs **without** proxy
-scheduling; our DT asks for it (`affinity = "proxy"`) and the driver does set it
-up. Dropping it from b02 let the host survive 8 s in one run instead of 0.5 s,
-but a repeat run reset again — noisy, needs proper repetition (`journal/33`).
+The only guest that runs on this device (`cpusys_vm`) runs without proxy
+scheduling, so it was a suspect. A controlled 3+3 run says it makes **no**
+difference: with `crash-fatal` removed the host survives either way, and the
+guest dies either way (`journal/33`, corrected in `journal/34`).
+
+The vCPU **never executes**, in any variant, ~0.2 s after `VCPU_RUN` — even with
+a one-instruction `b .` guest. Long host survival is not guest liveness.
 
 ## Tooling notes that save a round
 

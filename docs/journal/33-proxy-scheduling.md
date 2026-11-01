@@ -20,6 +20,7 @@ a second run reset again. The guest itself still aborts in ~0.2 s (the probe's
 own 50 ms sample loop stops after a handful of iterations), so this is not yet
 a fix, but it is the first change that altered the *host* behaviour at all.
 
-Given the noise, the honest status is: proxy scheduling is the prime suspect and
-the experiments around it are worth repeating properly (several runs each,
-variant kept vs. removed), not a solved problem.
+**Correction ([34](34-proxy-does-not-matter.md)):** a controlled 3+3 run shows
+proxy scheduling makes no difference — the host survives in both variants once
+`crash-fatal` is gone, and the guest dies in both. Repeating also showed the
+"survived 8 s" was host survival, not guest liveness.
