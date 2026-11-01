@@ -149,3 +149,8 @@ mmap → `irqfd`/`ioeventfd` → wait), with three traps recorded — `flags` mu
 Host-side backend arming is complete (features, queue max, device config, mmap,
 `irqfd`/`ioeventfd` on both labels) but the guest never probes the device — the
 guest DT is the open question, see [17](docs/17-backend-up-guest-silent.md).
+
+The guest device tree ships inside the bundle (`trustedvm.b02`, a 22-entry dtbo)
+and labels are the other way round than assumed: `0x11` is the `hvc0` console,
+`0x10` is the disk — see [18](docs/18-guest-dt-in-bundle.md). Guest DT is
+editable because we can re-sign.
