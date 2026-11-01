@@ -74,6 +74,14 @@ The vendor's Rust launcher is on the phone and is the reference implementation
 "Get reserved mem size" `EINVAL`. `trustedvm` is not in
 `/vendor/etc/qvirtmgr-vndr.json`, so nothing auto-starts it.
 
+## Full ioctl table: `docs/21`
+
+`qcrosvm`'s commands, both numbering families, and which of them this driver
+accepts. `ACK_DRIVER_OK` does **not** exist here; the driver only speaks the
+legacy family. Two steps in its order were missing from our tool: `0xB245`
+(get vcpu count) and `0x8008B261` returning the *reserved memory size* (we got
+`0` and ignored it while hardcoding 2 vCPUs).
+
 ## Next hypotheses (in order)
 
 1. find the feature bits the driver accepts for word 1 (`set_features 1/0x1e
