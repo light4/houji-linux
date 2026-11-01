@@ -87,6 +87,13 @@ bundle is installed on the device right now; delete
 * the device is on the **stock** bundle again; the stub bundle lives in `/tmp`
   (`outl/`, `signed_loop`, `comb_loop`).
 
+## Prime suspect: proxy scheduling
+
+The only guest that runs on this device (`cpusys_vm`) runs **without** proxy
+scheduling; our DT asks for it (`affinity = "proxy"`) and the driver does set it
+up. Dropping it from b02 let the host survive 8 s in one run instead of 0.5 s,
+but a repeat run reset again — noisy, needs proper repetition (`journal/33`).
+
 ## Tooling notes that save a round
 
 * loader lifecycle logs are `dev_dbg`: re-enable with

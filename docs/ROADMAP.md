@@ -22,6 +22,9 @@ verification.
   side, not a panic (`journal/26`, `journal/27`).
 * watch `/proc/vmkmsg` as soon as a guest survives long enough to write to it
   (`journal/28`).
+* repeat the proxy-scheduling experiment properly: several runs with
+  `affinity = "proxy"` versus removed, recording both host survival and the
+  probe's own sample count (`journal/33`).
 * read the start path of the one VM that works, `cpusys_vm` (vmid 50): its
   dmesg lines, proxy-sched setup and VM-create arguments — the only reference
   that is known-good on this device (`journal/32`).
