@@ -42,8 +42,9 @@ Not implemented: `ACK_DRIVER_OK` (`0xC004B26B`, `0xC004BC0B`) → dmesg
   label << 12)`; a single `mmap` with offset 0 only covers the first backend.
 * `set_features` returns the device's support mask (`0x1e`) for any subset and
   `0` only for `0x1f` — request the mask plus `VIRTIO_F_VERSION_1`.
-* every label used must be declared in the guest DT of the bundle, otherwise
-  there is no device behind it.
+* labels are fixed by the hyp/RM, not by the bundle: `0x10`/`0x11` (and `0x12`
+  for the swiotlb shm in the guest DT) exist whether or not the guest DT mentions
+  them (`journal/36`).
 * `setfw` on an unsigned/rebuilt bundle fails `VM_AUTH_IMAGE`; re-sign first
   ([bundle-format](bundle-format.md)).
 * one VM per boot: a failed attempt leaks the 68 MB `trust_ui_vm_region` CMA.
