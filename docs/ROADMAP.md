@@ -6,7 +6,7 @@ there.
 
 ## The one open question
 
-**Why does the RM refuse `VM_START` (`NORESOURCE`) for an unauthenticated crosvm
+**Why does the RM refuse `VM_START` (`NOMEM`) for an unauthenticated crosvm
 VM on `/dev/gunyah`?** That path is the only one that can run our own kernel
 (`journal/42`). Configure and init succeed; start fails, with or without pVM
 options and vm-config overlays.
@@ -19,7 +19,7 @@ authenticated against Xiaomi's root, `qtestsign` is rejected (`journal/42`).
 * bisect crosvm's generated `gunyah-vm-config` against `cpusys_vm`'s working one
   (vcpus `affinity`/`affinity-map`, memory base, vdevices) via
   `--device-tree-overlay`, since the RM parses that node;
-* try `--cpus` / memory sizes / no virtio devices to see whether `NORESOURCE`
+* try `--cpus` / memory sizes / no virtio devices to see whether `NOMEM`
   tracks a quota;
 * get an RM log: `/sys/kernel/debug/gunyah/hyp_uart_ctrl` and `/proc/tzdbg/hyp_log`
   are present but silent on this production hyp.

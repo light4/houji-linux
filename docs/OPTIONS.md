@@ -24,7 +24,7 @@ unchanged. It does not get `/dev/kvm` or custom secondary VMs either.
 |---|---|---|---|
 | hardware virtualization | no (still Gunyah's primary VM, owns EL1) | no (shares Android's kernel) | **yes** |
 | independent system | yes, own kernel and init | no, isolated userspace only | yes, own kernel |
-| doable today | yes, proven route | yes | **no** — RM rejects `VM_START` with `NORESOURCE` |
+| doable today | yes, proven route | yes | **no** — RM rejects `VM_START` with `NOMEM` |
 | main difficulty | kernel config + hardware enablement | almost none | unknown cause, no RM log |
 | performance | native | native | near-native (virtio IO) |
 | hardware | see "drivers" below | no display/GPU of its own | virtio only: disk, net, serial; no GPU |

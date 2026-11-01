@@ -9,7 +9,7 @@ without proot.
 |---|---|
 | `/dev/kvm` | closed — EL2 belongs to the Gunyah hypervisor |
 | VM via vendor loader `/dev/qgunyah` | closed — only Xiaomi-signed VMs boot |
-| unauthenticated VM via `/dev/gunyah` (crosvm) | blocked — RM rejects `VM_START` (`NORESOURCE`) |
+| unauthenticated VM via `/dev/gunyah` (crosvm) | blocked — RM rejects `VM_START` (`NOMEM`) |
 | native Linux as primary OS | open — stock GKI 6.1 kernel needs `DEVTMPFS`/`FHANDLE`/namespaces |
 | chroot on the Android kernel | works, not an independent system |
 

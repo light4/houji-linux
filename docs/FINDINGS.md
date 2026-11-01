@@ -71,7 +71,7 @@ phone resets — **the same signature as our probe**
 
 Only an **unauthenticated VM on `/dev/gunyah`** (mainline ABI, crosvm, own kernel)
 avoids the signature. On this ROM the Resource Manager rejects its `VM_START` with
-`NORESOURCE` (configure and init succeed), with or without pVM options, and the
+`NOMEM` (configure and init succeed), with or without pVM options, and the
 production hyp exposes no RM log to explain why
 ([journal/42](journal/42-patched-bundles-never-loaded.md),
 [journal/11](journal/11-crosvm-pvmfw.md)).
