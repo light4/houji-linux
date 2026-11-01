@@ -22,9 +22,9 @@ verification.
   side, not a panic (`journal/26`, `journal/27`).
 * watch `/proc/vmkmsg` as soon as a guest survives long enough to write to it
   (`journal/28`).
-* bisect the virtio path: build a `trustedvm` variant with `virtio-backends`
-  and the virtio vdevices removed entirely, mirroring `cpusys_vm`'s shape
-  (`journal/35`).
+* ~~bisect the virtio path via the DT~~ — the device list is not in the bundle
+  (`journal/36`); only `cpusys_vm` (no virtio at all) and fixed firmware
+  composition remain as evidence.
 * repeat the proxy-scheduling experiment properly: several runs with
   `affinity = "proxy"` versus removed, recording both host survival and the
   probe's own sample count (`journal/33`).

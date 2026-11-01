@@ -44,8 +44,11 @@ device-reset event the guest would produce first. Full table and traps:
 * the guest DT ships in the bundle as `trustedvm.b02` — a 22-entry **dtbo
   template** (`virtio-mmio@N/memory { qcom,label, base }`, no `reg`, no
   `interrupts`), windows at `0xda6f8000` (console) / `0xda6fc000` (disk).
-* the dtbo overlay we build is **not** merged into the Linux DT; the loader reads
-  the backends from the bundle. Stock `dtbo_a` is the safe state.
+* neither the dtbo overlay nor the bundle's guest DT drives the device list:
+  stripping every virtio node from all 22 `b02` entries (and cutting the table to
+  one entry) still yields `Recognized virtio backend device with label 10/11`.
+  Roof level: the hyp/RM decides the composition (`journal/36`). Stock `dtbo_a`
+  is the safe state.
 * there is **no boot-context ioctl**: guest entry state is hyp-side.
 * one VM per boot — every failed attempt leaks the 68 MB CMA region.
 * no `/dev/gh_virtio_backend_<label>` nodes exist; `qcrosvm` expects them
