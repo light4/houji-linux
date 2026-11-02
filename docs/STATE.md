@@ -17,6 +17,7 @@ stock kernel. Summary of how it got here: [FINDINGS](FINDINGS.md); routes compar
 | DroidVM | `0.0.6.r242.3348830-dev`; runtime modules GH Unmovable, Gunyah Host Share, Gunyah kvcalloc Fix auto-load with its daemon |
 | network | DroidVM Linux bridge `br-net0`, 192.168.233.1/24, NAT + DHCP over Wi-Fi |
 | SELinux | enforcing |
+| also installed | DroidDeck 0.6.9 (`com.droiddeck.launcher`, proot, Ubuntu runtime `ubuntu-r1-rc4` + KDE desktop) for GPU/gaming use; `settings_enable_monitor_phantom_procs=false`. Unmodified fork: [light4/DroidDeck](https://github.com/light4/DroidDeck) |
 
 ## Guest (VM `arch` in DroidVM)
 

@@ -15,6 +15,7 @@ Arch Linux ARM 作为 Gunyah 客户机运行在小米 14 上，与 Android 同�
 | DroidVM | `0.0.6.r242.3348830-dev`；运行时模块 GH Unmovable、Gunyah Host Share、Gunyah kvcalloc Fix 随其后台进程自动加载 |
 | 网络 | DroidVM 的 Linux bridge `br-net0`，192.168.233.1/24，NAT + DHCP，经 Wi-Fi 出网 |
 | SELinux | enforcing |
+| 另外装了 | DroidDeck 0.6.9（`com.droiddeck.launcher`，proot，Ubuntu 运行时 `ubuntu-r1-rc4` + KDE 桌面），用于 GPU 和游戏；已设 `settings_enable_monitor_phantom_procs=false`。未修改的 fork：[light4/DroidDeck](https://github.com/light4/DroidDeck) |
 
 ## 客户机（DroidVM 里的 VM `arch`）
 
