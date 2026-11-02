@@ -1,10 +1,9 @@
 # Options for running Arch Linux / NixOS on houji
 
-> **Update (journal/51):** a Linux 客户机 boots on the stock kernel when guest RAM is *lent* (`crosvm-dv --protected-vm-without-firmware`). The `VM_START` error was `NORESOURCE` (2), not `NOMEM` — earlier decodes were off by one — and the VMID patch is irrelevant.
-
-
 Three ways forward after [FINDINGS](FINDINGS.md). Only option 3 is hardware
 virtualization; options 1 and 2 follow the route LineageOS and Droidian take.
+**Option 3 works today** on the stock kernel: Arch Linux ARM runs as a Gunyah
+客户机 under DroidVM ([journal/51](journal/51-first-linux-guest-boots.md)–[58](journal/58-pseudo-unprotected-nokaslr.md)).
 Background on the kernel and Droidian is in
 [journal/43](journal/43-kernel-config-and-droidian.md).
 
@@ -23,17 +22,55 @@ unchanged. It does not get `/dev/kvm` or custom secondary VMs either.
 
 ## Comparison
 
-| | 1. Native Linux as the primary OS | 2. Android kernel + real chroot/container | 3. `/dev/gunyah` + crosvm unauthenticated VM |
+| | 1. Native Linux as the primary OS | 2. Android kernel + real chroot/container | 3. Gunyah VM (`/dev/gunyah`, crosvm/DroidVM) |
 |---|---|---|---|
 | hardware virtualization | no (still Gunyah's primary VM, owns EL1) | no (shares Android's kernel) | **yes** |
-| independent system | yes, own kernel and init | no, isolated userspace only | yes, own kernel |
-| doable today | yes, proven route | yes, with a patched kernel | **needs a patched kernel** (lend is refused on stock `6.1.118`) |
-| main difficulty | kernel config + hardware enablement | almost none | unknown cause, no RM log |
-| performance | native | native | near-native (virtio IO) |
-| hardware | see "drivers" below | no display/GPU of its own | virtio only: disk, net, serial; no GPU |
-| impact on Android | replaces it (or dual boot) | none | none |
-| risk / rollback | medium — flash `boot`(+`vendor_boot`); stock backups restore | low — files in `/data` | low — userspace only |
-| effort | weeks–months | hours | unbounded: days, or never |
+| independent system | yes, own kernel and init | no, isolated userspace only | yes, own kernel and systemd |
+| state | not started | not started | **working**: Arch, 4 vCPU, 1.4 GiB, network, `pacman -Syu` |
+| host changes | custom `boot` (+`vendor_boot`) | root | root (KernelSU), `gh-hugepage-reserve` + DroidVM runtime modules; stock kernel |
+| performance | native | native | near-native CPU; virtio I/O |
+| hardware | phone hardware, see "drivers" below | Android's, via its kernel; no display of its own | virtio only: disk, net, serial, (gpu/input/sound need guest kernel v3) |
+| impact on Android | replaces it (or dual boot) | none | none; Android runs alongside |
+| risk / rollback | medium — flash `boot`(+`vendor_boot`); stock backups restore | low — files in `/data` | low — userspace + KSU modules; disable module, reboot |
+| effort | weeks–months | hours | done (days, incl. the dead ends) |
+
+### Pros and cons
+
+**1. Native Linux as the primary OS**
+
+* \+ full native performance and the phone's own hardware: display, GPU (turnip on
+  KGSL), touch, battery, USB, Wi-Fi;
+* \+ a real phone OS, not a guest inside Android;
+* − Android is gone (or dual boot), and with it modem, camera, audio, fingerprint
+  unless Halium/libhybris is added;
+* − kernel must be rebuilt (`DEVTMPFS`, `FHANDLE`, namespaces) and stay CRC-compatible
+  with 300+ vendor modules (`MODVERSIONS`, `TRIM_UNUSED_KSYMS`);
+* − no existing houji/SM8650 port; weeks to months of bring-up; every flash risks
+  a non-booting phone (recoverable via fastboot backups).
+
+**2. Android kernel + real chroot/container**
+
+* \+ fastest to get: hours, files in `/data`, nothing flashed;
+* \+ native speed (no ptrace like proot), direct access to Android's network and storage;
+* − not an independent system: Android's kernel, no own init — systemd cannot be
+  PID 1;
+* − the stock kernel lacks `PID_NS`/`USER_NS`: no systemd-nspawn/LXC, no Nix sandbox;
+* − no display of its own (VNC/X server app only), shares Android's lifecycle.
+
+**3. Gunyah VM**
+
+* \+ real hardware virtualization with our own kernel and a full systemd Arch,
+  isolated from Android, on the **stock** host kernel;
+* \+ Android stays fully usable; start/stop/console in the DroidVM app; ssh from a PC;
+* \+ rollback is trivial (stop the VM, disable the KSU modules);
+* − virtio devices only: no direct phone hardware (camera, modem, sensors); GPU
+  acceleration is DroidVM's virgl/gfxstream path, not native;
+* − guest RAM comes from a boot-time 2 MiB page pool (`gh-hugepage-reserve`, 2 GiB
+  held from Android); without it the ceiling is ~256 MiB after uptime;
+* − depends on DroidVM's crosvm fork and test builds, and on root;
+* − after a reboot the phone must be unlocked once before a VM can start (CE storage);
+* − quirks found: `nokaslr` needed in pseudo-unprotected mode, custom guest kernel
+  (no modules) maintained by us.
 
 ## Option 1 — native Linux with the existing kernel and drivers
 
@@ -96,39 +133,37 @@ speed (no ptrace like proot). Limits come from the same kernel config: without
 cannot be PID 1. Good for quick, practical use; not an independent system and not
 virtualization.
 
-## Option 3 — unauthenticated VM on `/dev/gunyah`
+## Option 3 — Gunyah VM on `/dev/gunyah`
 
-The only route that is hardware virtualization with our own kernel. Status ([journal/42](journal/42-patched-bundles-never-loaded.md),
-[journal/44](journal/44-crosvm-start-is-nomem.md)): configure and init are
-accepted, `VM_START` fails with **`NOMEM`** — hyp-side allocation, independent of
-`--mem` (16 MB…1 GB), of optional devices and of doorbell count, even on a freshly
-booted device. `pinned`/`static` affinity fail earlier with `MAP_FAILED`, and
-`vm-attrs = "crash-fatal"` turns the reply into `BUSY`, so the config *is* parsed;
-the shortfall happens before attributes matter. Every
-userspace lever was then swept — memory size, IPA base, vCPU count, VM name,
-affinity, attributes, optional devices, doorbell count, and stopping the only other
-running VM — all still `NOMEM` ([journal/45](journal/45-nomem-sweep.md)). Reading:
-the hyp's budgets live in the signed `hypvm*`/devcfg for the VMs declared there and
-this production build logs nothing.
+The only route that is hardware virtualization with our own kernel. History in
+[journal/42–50](journal/): the vendor loader only boots signed VMs; the
+unauthenticated path failed at `VM_START`, first misread as `NOMEM` and blamed on
+a VMID kernel bug whose patch turned out to be a no-op here.
 
-Cause found ([journal/46](journal/46-nomem-is-a-known-kernel-bug.md)): on SM8650 the
-kernel hardcodes `QCOM_SCM_VMID_HLOS` as the SCM source for every lend, while the
-RM's VMID is above `QCOM_SCM_MAX_MANAGED_VMID`, so all lends are rejected. It is a
-**kernel** bug with a 38-line fix (`gh_rm_get_vmid()` + managed-VMID mapping) and a
-houji-specific fork with ready builds. Unlocking allows a patched kernel, so this
-option is **open again**, at the price of running a custom kernel.
+What actually works ([journal/51](journal/51-first-linux-guest-boots.md) onwards):
 
-Progress ([journal/47](journal/47-kernel-flashed.md)): that kernel is flashed and
-boots, but the fix lives in the `gunyah_qcom` **module**, which the releases do not
-ship (`do.modules=0`), so `NOMEM` is unchanged until that module is rebuilt and
-installed. The published releases do not contain the fix at all —
-`GUNYAH_QCOM_PLATFORM` is unset in their config, so the patched file is never
-built ([journal/48](journal/48-releases-do-not-contain-the-fix.md)). Building the
-module ourselves is the current step.
+* **cause**: the RM requires the guest's main memory parcel to be **lent**, not
+  shared; `GH_VM_SET_USER_MEM_REGION` shares it, so `VM_START` returned
+  `NORESOURCE`. DroidVM's crosvm lends (`--protected-vm-without-firmware`) or uses
+  its pseudo-unprotected shim;
+* **memory**: beyond ~256 MiB the lend fails on fragmentation; `gh-hugepage-reserve`
+  supplies 2 MiB pages from a boot-time pool ([journal/57](journal/57-hugepage-reserve-1536m.md));
+* **guest**: ACK 6.1 `defconfig` kernel + virtio, Landlock, PL030 RTC
+  (`guest/build_guest.sh`), Arch Linux ARM ext4 disk (`guest/mk_alarm.sh`);
+* **management**: DroidVM app, NAT bridge over the phone's Wi-Fi.
+
+Two VM modes, both working:
+
+| mode | pros | cons |
+|---|---|---|
+| `pseudo_unprotected` (DroidVM default, in use) | no swiotlb: +58 MiB RAM, no bounce for virtio I/O; stock distro kernels possible | needs `nokaslr` with our kernel ([journal/58](journal/58-pseudo-unprotected-nokaslr.md)); relies on the DroidVM shim |
+| `protected_without_firmware` | simplest path, no shim | guest kernel needs `DMA_RESTRICTED_POOL`; swiotlb (64 MiB) taken from guest RAM, virtio I/O bounces |
 
 ## Recommendation
 
-* usable Arch/NixOS soon → option 2 now;
-* a real independent system → option 1, starting with the offline CRC check;
-* option 3 → rebuild `gunyah_qcom.ko` with the patch (or fork their workflow with
-  module packaging); abandon if the VM still answers `NOMEM` after that.
+* **use option 3** — it is working: Arch Linux ARM in a Gunyah 客户机 next to
+  Android, managed in DroidVM. Next steps: guest kernel v3 for a desktop
+  ([DESKTOP](DESKTOP.md)), more RAM if needed (`pool_want`);
+* option 2 remains the zero-setup fallback when no VM is wanted;
+* option 1 only if the goal becomes replacing Android, starting with the offline
+  CRC check of the vendor modules.

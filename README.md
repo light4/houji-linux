@@ -10,12 +10,13 @@ without proot.
 | `/dev/kvm` | closed — EL2 belongs to the Gunyah hypervisor |
 | VM via vendor loader `/dev/qgunyah` | closed — only Xiaomi-signed VMs boot |
 | unauthenticated VM via `/dev/gunyah` (crosvm) | **works on the stock kernel** — Arch Linux ARM boots to a systemd login ([journal/53](docs/journal/53-arch-linux-arm-boots.md)) |
-| native Linux as primary OS | open — stock GKI 6.1 kernel needs `DEVTMPFS`/`FHANDLE`/namespaces |
+| native Linux as primary OS | not started — kernel needs `DEVTMPFS`/`FHANDLE`/namespaces |
 | chroot on the Android kernel | works, not an independent system |
 
 ## Docs
 
-* [OPTIONS](docs/OPTIONS.md) — the three ways forward
+* [OPTIONS](docs/OPTIONS.md) — the three routes compared, pros and cons
+* [DESKTOP](docs/DESKTOP.md) — desktop choice for the 客户机
 * [FINDINGS](docs/FINDINGS.md) — what the virtualization work established
 * [RESTORE](docs/RESTORE.md) — rollback and stock hashes
 * [index](docs/README.md) — state, reference, lab journal
