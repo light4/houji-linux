@@ -115,8 +115,14 @@ RM's VMID is above `QCOM_SCM_MAX_MANAGED_VMID`, so all lends are rejected. It is
 houji-specific fork with ready builds. Unlocking allows a patched kernel, so this
 option is **open again**, at the price of running a custom kernel.
 
+Progress ([journal/47](journal/47-kernel-flashed.md)): that kernel is flashed and
+boots, but the fix lives in the `gunyah_qcom` **module**, which the releases do not
+ship (`do.modules=0`), so `NOMEM` is unchanged until that module is rebuilt and
+installed. That is the current step.
+
 ## Recommendation
 
 * usable Arch/NixOS soon → option 2 now;
 * a real independent system → option 1, starting with the offline CRC check;
-* option 3 → time-boxed experiments only.
+* option 3 → rebuild `gunyah_qcom.ko` with the patch (or fork their workflow with
+  module packaging); abandon if the VM still answers `NOMEM` after that.
