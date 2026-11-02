@@ -12,6 +12,8 @@ scripts/config --file $O/.config \
   -e VSOCKETS -e VIRTIO_VSOCKETS -e SERIAL_8250 -e SERIAL_8250_CONSOLE -e SERIAL_OF_PLATFORM \
   -e EXT4_FS -e BTRFS_FS -e SQUASHFS -e OVERLAY_FS -e AUTOFS_FS -e TMPFS_POSIX_ACL -e CGROUPS -e BPF_SYSCALL \
   -e NAMESPACES -e USER_NS -e PID_NS -e SECCOMP -e CRYPTO_USER_API_HASH -e DMIID \
+  -e RTC_DRV_PL030 -e SECURITY_LANDLOCK -e SECURITY_YAMA -e BPF_LSM -d KVM \
+  --set-str LSM landlock,lockdown,yama,integrity,bpf \
   -d DEBUG_INFO -d DEBUG_INFO_BTF -d DEBUG_INFO_DWARF_TOOLCHAIN_DEFAULT -e DEBUG_INFO_NONE -d MODULES
 make O=$O olddefconfig
 make O=$O -j"$(nproc)" Image 2>&1 | tail -3
