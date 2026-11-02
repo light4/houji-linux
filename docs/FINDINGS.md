@@ -74,13 +74,18 @@ avoids the signature. On this ROM the Resource Manager rejects its `VM_START` wi
 `NOMEM` (configure and init succeed). Memory size, IPA base, vCPU count, VM name,
 `vm-attrs`, optional devices, doorbell count and stopping the only other VM all
 leave it unchanged ([journal/45](journal/45-nomem-sweep.md),
-[journal/42](journal/42-patched-bundles-never-loaded.md)); the budgets live in the
-signed `hypvm*`/devcfg and this production hyp logs nothing. Parked until a
-firmware update.
+[journal/42](journal/42-patched-bundles-never-loaded.md)).
 
-So on this firmware: no `/dev/kvm`, no custom code in a secured VM, and the
-unauthenticated path refused by the RM. Proot-style containers are the only way to
-run Arch/NixOS userspace here today.
+**Not a dead end:** it is a kernel bug, not the firmware
+([journal/46](journal/46-nomem-is-a-known-kernel-bug.md)) — on SM8650 the RM's VMID
+is above `QCOM_SCM_MAX_MANAGED_VMID` and `gunyah_qcom.c` hardcodes the HLOS VMID
+for every lend, so SCM rejects them all. A 38-line fix and a houji fork with ready
+builds exist. Running a patched kernel (an unlocked bootloader allows it) reopens
+the path — and the same kernel is what option 1 needs for native Linux.
+
+So on stock firmware: no `/dev/kvm`, no custom code in a secured VM, and the
+unauthenticated path needs a kernel patch. Without flashing a kernel, proot-style
+containers are the only way to run Arch/NixOS userspace here.
 
 ## What next
 
