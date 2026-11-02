@@ -17,7 +17,7 @@ fastboot flash boot   ~/playground/houji-linux/baseline/boot_a_OS3.0.7.0_orig.im
 ## Custom kernel / root
 
 Since `journal/47` the device runs a **custom kernel**
-(`6.1.138` + Gunyah VMID patch) in `boot_a`, sha256 `ee72b00c…`, and a
+(`v6.1.138-GunyahFix-21` from skczhans, which in fact lacks the patch — see journal/48) in `boot_a`, and a
 **Magisk-patched `init_boot`** (KernelSU is not used any more; its LKM does not
 match the new kernel).
 
