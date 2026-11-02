@@ -43,6 +43,14 @@ ksud-aarch64-linux-android boot-patch -b init_boot.img \
 Note: the GunyahFix kernels carry a built-in KernelSU (driver 32644) that does
 not match the 3.3.1 manager; with them, use a matching CI manager build or Magisk.
 
+## KernelSU modules (journal/57)
+
+* `gh-hugepage-reserve` v12 — boot-time 2 MiB page pool, `pool_want=1024` (2 GiB).
+  Disable: `touch /data/adb/modules/gh-hugepage-reserve/disable` (or KernelSU
+  safe mode / Module tab), reboot. It self-disables after a crashed boot.
+* `gunyah-kvcalloc-fix` — disabled (superseded by DroidVM's runtime module).
+* DroidVM runtime modules (`*_gki_6.1`) auto-load with the DroidVM daemon only.
+
 ## Firmware bundle
 
 The device is on the **stock** `trustedvm` bundle (nothing patched is installed).
