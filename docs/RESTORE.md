@@ -14,6 +14,23 @@ fastboot flash boot   ~/playground/houji-linux/baseline/boot_a_OS3.0.7.0_orig.im
 | `dtbo_a` | `6264b8e66e2e7720e9f593f93f9b7390ccbe5675c04d15c0c13abf1ff327456b` |
 | `boot_a` | `c88537b854911c142a920989865b663a5b7e0b3faab7025a7858b7a7adddafa9` |
 
+## Custom kernel / root
+
+Since `journal/47` the device runs a **custom kernel**
+(`6.1.138` + Gunyah VMID patch) in `boot_a`, sha256 `ee72b00c…`, and a
+**Magisk-patched `init_boot`** (KernelSU is not used any more; its LKM does not
+match the new kernel).
+
+```bash
+# back to stock kernel + KernelSU-era init_boot
+fastboot flash boot     ~/Downloads/houji_backup/boot_a_pre_kpatch_20261102.img
+fastboot flash init_boot ~/Downloads/houji_rom/houji_images_OS3.0.7.0.WNCCNXM_16.0/images/init_boot.img
+```
+
+Magisk modules currently installed: `gunyah_kvcalloc_fix` (from the Gunyah-fix
+project). `boot_a_kernel_v6.1.138_GunyahFix17.img` in the same backup folder is a
+copy of what is flashed now.
+
 ## Firmware bundle
 
 The device is on the **stock** `trustedvm` bundle (nothing patched is installed).
