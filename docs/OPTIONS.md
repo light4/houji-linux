@@ -24,7 +24,7 @@ unchanged. It does not get `/dev/kvm` or custom secondary VMs either.
 |---|---|---|---|
 | hardware virtualization | no (still Gunyah's primary VM, owns EL1) | no (shares Android's kernel) | **yes** |
 | independent system | yes, own kernel and init | no, isolated userspace only | yes, own kernel |
-| doable today | yes, proven route | yes | **no** — RM answers `NOMEM` to `VM_START`, every lever swept |
+| doable today | yes, proven route | yes, with a patched kernel | **needs a patched kernel** (lend is refused on stock `6.1.118`) |
 | main difficulty | kernel config + hardware enablement | almost none | unknown cause, no RM log |
 | performance | native | native | near-native (virtio IO) |
 | hardware | see "drivers" below | no display/GPU of its own | virtio only: disk, net, serial; no GPU |
@@ -108,8 +108,12 @@ running VM — all still `NOMEM` ([journal/45](journal/45-nomem-sweep.md)). Read
 the hyp's budgets live in the signed `hypvm*`/devcfg for the VMs declared there and
 this production build logs nothing.
 
-**Parked until a firmware update.** A newer hyp may change it; check the tripwires
-in [FINDINGS](FINDINGS.md) after any update.
+Cause found ([journal/46](journal/46-nomem-is-a-known-kernel-bug.md)): on SM8650 the
+kernel hardcodes `QCOM_SCM_VMID_HLOS` as the SCM source for every lend, while the
+RM's VMID is above `QCOM_SCM_MAX_MANAGED_VMID`, so all lends are rejected. It is a
+**kernel** bug with a 38-line fix (`gh_rm_get_vmid()` + managed-VMID mapping) and a
+houji-specific fork with ready builds. Unlocking allows a patched kernel, so this
+option is **open again**, at the price of running a custom kernel.
 
 ## Recommendation
 

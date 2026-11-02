@@ -14,10 +14,14 @@ options and vm-config overlays.
 The vendor-loader (`/dev/qgunyah`) path is closed for custom code: bundles are
 authenticated against Xiaomi's root, `qtestsign` is rejected (`journal/42`).
 
-## Option 3: parked
+## Option 3: needs a patched kernel
 
-`NOMEM` survived every userspace lever (`journal/45`). Nothing further is testable
-from the host on this firmware.
+`NOMEM` survived every userspace lever (`journal/45`) because it is a kernel bug:
+SM8650's RM VMID is above `QCOM_SCM_MAX_MANAGED_VMID` and
+`gunyah_qcom.c` hardcodes the HLOS VMID for lends
+([journal/46](journal/46-nomem-is-a-known-kernel-bug.md)). Fix is 38 lines, with a
+houji fork and ready builds available; requires flashing a custom kernel, which is
+also what option 1 needs.
 
 ## Old notes on option 3
 
