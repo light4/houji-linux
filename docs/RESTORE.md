@@ -14,22 +14,34 @@ fastboot flash boot   ~/playground/houji-linux/baseline/boot_a_OS3.0.7.0_orig.im
 | `dtbo_a` | `6264b8e66e2e7720e9f593f93f9b7390ccbe5675c04d15c0c13abf1ff327456b` |
 | `boot_a` | `c88537b854911c142a920989865b663a5b7e0b3faab7025a7858b7a7adddafa9` |
 
-## Custom kernel / root
+## Kernel / root
 
-Since `journal/47` the device runs a **custom kernel**
-(`v6.1.138-GunyahFix-21` from skczhans, which in fact lacks the patch — see journal/48) in `boot_a`, and a
-**Magisk-patched `init_boot`** (KernelSU is not used any more; its LKM does not
-match the new kernel).
+Current state (after `journal/48`): **stock kernel** (`boot_a` = the stock image,
+sha256 `c88537b8…`) and **KernelSU v3.3.1 LKM** in `init_boot`, Manager v3.3.1.
+Backups in `~/Downloads/houji_backup/`:
+
+| file | what |
+|---|---|
+| `boot_a_pre_kpatch_20261102.img` | stock `boot_a` (identical to the ROM's `boot.img`) |
+| `init_boot_ksu_v3.3.1_lkm.img` | ROM `init_boot` patched with `ksud boot-patch` (KernelSU 3.3.1 LKM) |
+| `boot_a_kernel_v6.1.138_GunyahFix17.img` | the custom Gunyah-fix kernel tried in `journal/47` |
 
 ```bash
-# back to stock kernel + KernelSU-era init_boot
-fastboot flash boot     ~/Downloads/houji_backup/boot_a_pre_kpatch_20261102.img
-fastboot flash init_boot ~/Downloads/houji_rom/houji_images_OS3.0.7.0.WNCCNXM_16.0/images/init_boot.img
+fastboot flash boot      ~/Downloads/houji_backup/boot_a_pre_kpatch_20261102.img
+fastboot flash init_boot ~/Downloads/houji_backup/init_boot_ksu_v3.3.1_lkm.img
 ```
 
-Magisk modules currently installed: `gunyah_kvcalloc_fix` (from the Gunyah-fix
-project). `boot_a_kernel_v6.1.138_GunyahFix17.img` in the same backup folder is a
-copy of what is flashed now.
+Recreate the KernelSU `init_boot` from scratch (as `shell` on the device, with the
+v3.3.1 release assets):
+
+```bash
+ksud-aarch64-linux-android boot-patch -b init_boot.img \
+  -m lkm-aarch64-android14-6.1_kernelsu.ko -i ksuinit-aarch64 \
+  --kmi android14-6.1 --partition init_boot -o . --out-name init_boot_ksu.img
+```
+
+Note: the GunyahFix kernels carry a built-in KernelSU (driver 32644) that does
+not match the 3.3.1 manager; with them, use a matching CI manager build or Magisk.
 
 ## Firmware bundle
 
