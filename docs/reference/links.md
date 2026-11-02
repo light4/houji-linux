@@ -53,6 +53,17 @@ otherwise.
 * [qtestsign](https://github.com/msm8916-mainline/qtestsign) — MBN signing; the
   produced signatures are **rejected** by this device's PIL check.
 
+## Userspace-on-Android (option 2 class)
+
+* [Droid-Deck/DroidDeck](https://github.com/Droid-Deck/DroidDeck) — SteamOS-like
+  stack on Android (GPL-3.0, created 2026-09, very active; 0.6.9 on 2026-10-31).
+  **proot**, no root needed; Arch Linux ARM KDE desktop (pacman snapshot), Steam
+  via FEX + Proton, Turnip directly on the host's KGSL (Adreno 730+, SM8650
+  listed), PulseAudio/PipeWire to Android. Limits per its README: software
+  desktop compositing, reduced Firefox sandbox under proot. Not an independent
+  system and not virtualization, but the only setup here with native Adreno
+  acceleration for Linux programs.
+
 ## Native boot on houji (option 1)
 
 * [lonzzi/UniXNU-houji](https://github.com/lonzzi/UniXNU-houji) — native iOS 16 /
