@@ -32,6 +32,10 @@ otherwise.
     AnyKernel3 zip and boot images, `v6.1.138-GunyahFix-*`.
   * [kvcalloc kprobe module](https://github.com/Yizhou147/Xiaomi14-8Gen3-Gunyah-Fix/blob/master/modules/gunyah_kvcalloc_fix.zip)
     — lifts the ~2 GB per-VM cap.
+  * **note:** the releases ship no modules and build with `GUNYAH_QCOM_PLATFORM`
+    unset, so the patch is not in them (`journal/48`).
+  * mirror with newer runs: [skczhans/copy-Xiaomi14-8Gen3-Gunyah-Fix](https://github.com/skczhans/copy-Xiaomi14-8Gen3-Gunyah-Fix/releases)
+    (`v6.1.138-GunyahFix-10…21`), same content.
   * field notes: disable mTHP pre-lend on SM8650 (2 MB collapse panics the hyp);
     keep `init_boot` free of Magisk patches.
 

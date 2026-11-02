@@ -118,7 +118,10 @@ option is **open again**, at the price of running a custom kernel.
 Progress ([journal/47](journal/47-kernel-flashed.md)): that kernel is flashed and
 boots, but the fix lives in the `gunyah_qcom` **module**, which the releases do not
 ship (`do.modules=0`), so `NOMEM` is unchanged until that module is rebuilt and
-installed. That is the current step.
+installed. The published releases do not contain the fix at all —
+`GUNYAH_QCOM_PLATFORM` is unset in their config, so the patched file is never
+built ([journal/48](journal/48-releases-do-not-contain-the-fix.md)). Building the
+module ourselves is the current step.
 
 ## Recommendation
 
