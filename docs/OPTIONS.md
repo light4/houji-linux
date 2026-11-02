@@ -47,8 +47,9 @@ unchanged. It does not get `/dev/kvm` or custom secondary VMs either.
   unless Halium/libhybris is added;
 * − kernel must be rebuilt (`DEVTMPFS`, `FHANDLE`, namespaces) and stay CRC-compatible
   with 300+ vendor modules (`MODVERSIONS`, `TRIM_UNUSED_KSYMS`);
-* − no existing houji/SM8650 port; weeks to months of bring-up; every flash risks
-  a non-booting phone (recoverable via fastboot backups).
+* − no Linux port for houji yet (a native XNU port exists, see below); weeks to
+  months of bring-up; every flash risks a non-booting phone (recoverable via
+  fastboot backups).
 
 **2. Android kernel + real chroot/container**
 
@@ -126,6 +127,15 @@ and the Halium/libhybris stack.
    wanted.
 
 Only `boot_a` (and maybe `vendor_boot_a`) is flashed; see [RESTORE](RESTORE.md).
+
+**New prior art (2026-11):** [UniXNU-houji](https://github.com/lonzzi/UniXNU-houji)
+boots a native iOS 16 / XNU on houji through a **Mu-Silicium UEFI houji package**
+(RAM-only, packed as a boot image — testable with `fastboot boot`, nothing
+flashed), at EL1 like this option. It also points to **Xiaomi's official kernel
+and DTS sources** (MiCode `shennong-u-oss`). Two consequences for option 1:
+(a) rebuild kernel *and* vendor modules from MiCode's source, so no CRC matching
+is needed; (b) or boot a Linux kernel through that UEFI, with a houji device tree
+derived from MiCode's DTS. See [reference/links](reference/links.md).
 
 ## Option 2 — Android kernel + real chroot/container
 

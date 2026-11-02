@@ -53,6 +53,29 @@ otherwise.
 * [qtestsign](https://github.com/msm8916-mainline/qtestsign) — MBN signing; the
   produced signatures are **rejected** by this device's PIL check.
 
+## Native boot on houji (option 1)
+
+* [lonzzi/UniXNU-houji](https://github.com/lonzzi/UniXNU-houji) — native iOS 16 /
+  XNU port to houji (created 2026-10-25, active). Boot chain: Qualcomm bootloader →
+  **Mu-Silicium UEFI with a houji board package** (`uefi/overlay/Platforms/Xiaomi/houjiPkg`,
+  "stage-1 RAM-only UEFI", packed as a v4 boot image) → DarwinBoot → XNU. Runs at
+  **EL1** as Gunyah's primary VM, replacing Android (same position as option 1).
+  Working: display at native resolution, touch, 8 cores with DVFS, UFS root,
+  battery via ADSP/PMIC GLINK, partial Adreno 750 (Turnip). Not yet: Wi-Fi, BT,
+  cellular, audio. Proves a custom OS can own the phone via UEFI; its houji
+  hardware notes (`docs/device-tree.md`, `docs/stock-power.md`) apply to Linux too.
+* [Project-Silicium/Mu-Silicium](https://github.com/Project-Silicium/Mu-Silicium)
+  — the UEFI; upstream has no `houjiPkg` (UniXNU-houji carries it).
+* [MiCode/Xiaomi_Kernel_OpenSource `shennong-u-oss`](https://github.com/MiCode/Xiaomi_Kernel_OpenSource/tree/317e609aa4fb956c3aff565b62215e5a8041ca0c)
+  and [MiCode/kernel_devicetree](https://github.com/MiCode/kernel_devicetree/tree/d28b3972becd282c19d9d5b1bbd4ece3c6ad3989)
+  (`qcom/houji-sm8650.dtsi`) — Xiaomi's official kernel and DTS for houji/shennong.
+  With the vendor modules buildable from source, option 1's CRC problem can be
+  avoided by rebuilding kernel and modules together.
+* [lolipuru/android_device_xiaomi_houji](https://github.com/lolipuru/android_device_xiaomi_houji),
+  [onelots/android_device_xiaomi_sm8650-common](https://github.com/onelots/android_device_xiaomi_sm8650-common),
+  [onelots/android_kernel_xiaomi_sm8650-devicetrees](https://github.com/onelots/android_kernel_xiaomi_sm8650-devicetrees)
+  — LineageOS 24 trees for houji / SM8650.
+
 ## Prior art on the EL2 question
 
 * [slbounce](https://github.com/TravMurav/slbounce) — Secure Launch handover; not

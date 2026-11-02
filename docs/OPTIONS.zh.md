@@ -38,7 +38,7 @@ LineageOS 替换的是左边一列，所有签名过的厂商固件原样复用�
 * \+ 是真正的手机系统，不是 Android 里的一个客户机；
 * − Android 没了（或者要做双系统），基带、相机、音频、指纹也随之失去，除非再加上 Halium/libhybris；
 * − 内核必须重编（`DEVTMPFS`、`FHANDLE`、命名空间），而且要和 300 多个厂商模块保持 CRC 兼容（`MODVERSIONS`、`TRIM_UNUSED_KSYMS`）；
-* − 没有现成的 houji/SM8650 移植，适配要数周到数月；每次刷机都可能刷到无法开机（可以用 fastboot 备份恢复）。
+* − houji 还没有 Linux 移植（已有一个原生 XNU 移植，见下文）；适配要数周到数月；每次刷机都可能刷到无法开机（可以用 fastboot 备份恢复）。
 
 **2. Android 内核 + 真 chroot/容器**
 
@@ -97,6 +97,8 @@ LineageOS 替换的是左边一列，所有签名过的厂商固件原样复用�
 4. 然后是显示 + GPU（KGSL 上的 turnip），再是 Wi-Fi；只有需要音频/基带时才上 Halium。
 
 只刷 `boot_a`（可能还有 `vendor_boot_a`），见 [RESTORE](RESTORE.zh.md)。
+
+**新的参考项目（2026-11）**：[UniXNU-houji](https://github.com/lonzzi/UniXNU-houji) 通过 **Mu-Silicium UEFI 的 houji 板级包**在 houji 上原生启动了 iOS 16 / XNU。这个 UEFI 只在内存里运行，打包成 boot 镜像，可以用 `fastboot boot` 测试而不刷任何分区；它和本方案一样运行在 EL1。它还引用了**小米官方的内核和设备树源码**（MiCode `shennong-u-oss`）。这对方案 1 有两点意义：(a) 用 MiCode 的源码把内核**和**厂商模块一起重编，就不用再对 CRC；(b) 或者通过这个 UEFI 启动 Linux 内核，设备树从 MiCode 的 DTS 派生。见 [reference/links](reference/links.md)。
 
 ## 方案 2：Android 内核 + 真 chroot/容器
 
