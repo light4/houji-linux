@@ -1,5 +1,8 @@
 # Options for running Arch Linux / NixOS on houji
 
+> **Update (journal/51):** a Linux 客户机 boots on the stock kernel when guest RAM is *lent* (`crosvm-dv --protected-vm-without-firmware`). The `VM_START` error was `NORESOURCE` (2), not `NOMEM` — earlier decodes were off by one — and the VMID patch is irrelevant.
+
+
 Three ways forward after [FINDINGS](FINDINGS.md). Only option 3 is hardware
 virtualization; options 1 and 2 follow the route LineageOS and Droidian take.
 Background on the kernel and Droidian is in

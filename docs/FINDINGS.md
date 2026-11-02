@@ -1,5 +1,8 @@
 # Findings — one page
 
+> **Update (journal/51):** a Linux 客户机 boots on the stock kernel when guest RAM is *lent* (`crosvm-dv --protected-vm-without-firmware`). The `VM_START` error was `NORESOURCE` (2), not `NOMEM` — earlier decodes were off by one — and the VMID patch is irrelevant.
+
+
 Everything below was verified on device (houji / 23127PN0CC, HyperOS 3.0.7.0,
 KernelSU). The device matches the stock `OS3.0.7.0.WNCCNXM` fastboot ROM
 partition-for-partition, except KernelSU's `init_boot`
