@@ -10,6 +10,7 @@ Start with [FINDINGS](FINDINGS.md) (one page, results and boundary) and
 * [qgunyah-abi](reference/qgunyah-abi.md) — implemented ioctl surface, traps
 * [bundle-format](reference/bundle-format.md) — MBN bundle and dtbo containers,
   signing flow
+* [links](reference/links.md) — external references (DroidVM, the VMID fix, Droidian)
 * [harness](reference/harness.md) — toolchain, logging across a reset, stub
   pitfalls
 

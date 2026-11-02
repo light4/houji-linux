@@ -58,5 +58,5 @@ things to keep in mind: flashing a *kernel with KernelSU* into `boot_a` replaces
 our current KernelSU install (matching Manager APK required), and the patched
 kernel is also exactly what option 1 needs for a native Arch/NixOS.
 
-[Droid-VM/DroidVM]: https://github.com/Droid-VM/DroidVM
-[Yizhou147/Xiaomi14-8Gen3-Gunyah-Fix]: https://github.com/Yizhou147/Xiaomi14-8Gen3-Gunyah-Fix
+All links, including the patch and the prebuilt artefacts, are collected in
+[reference/links](../reference/links.md).
