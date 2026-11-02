@@ -1,4 +1,4 @@
-# Userspace in the 客户机; the newer ROM changes nothing that matters
+# Userspace in the guest; the newer ROM changes nothing that matters
 
 ## Alpine userspace
 

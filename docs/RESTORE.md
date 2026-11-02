@@ -1,3 +1,5 @@
+[English](RESTORE.md) | [中文](RESTORE.zh.md)
+
 # Restore / rollback
 
 Nothing except `boot_a` was ever flashed during the harness work, and the run
@@ -50,6 +52,19 @@ not match the 3.3.1 manager; with them, use a matching CI manager build or Magis
   safe mode / Module tab), reboot. It self-disables after a crashed boot.
 * `gunyah-kvcalloc-fix` — disabled (superseded by DroidVM's runtime module).
 * DroidVM runtime modules (`*_gki_6.1`) auto-load with the DroidVM daemon only.
+
+## Guest / DroidVM
+
+The VM lives entirely in userspace; removing it touches nothing flashed.
+
+| what | where |
+|---|---|
+| guest kernel | `/data/local/tmp/guest.Image` (build: `guest/build_guest.sh`) |
+| guest disk | `/data/local/tmp/alarm.img` (build: `guest/mk_alarm.sh`) |
+| VM / network config | `/data/data/cn.classfun.droidvm/files/{vms,networks,disks}.json` |
+| app | `cn.classfun.droidvm` — uninstall removes config and runtime modules |
+
+Back up `alarm.img` with the VM stopped (`adb pull`); it is the only stateful part.
 
 ## Firmware bundle
 

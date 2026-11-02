@@ -1,4 +1,4 @@
-# A Linux 客户机 boots — stock kernel, no patch, guest RAM must be *lent*
+# A Linux guest boots — stock kernel, no patch, guest RAM must be *lent*
 
 ## Two corrections
 

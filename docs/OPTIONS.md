@@ -1,9 +1,11 @@
+[English](OPTIONS.md) | [中文](OPTIONS.zh.md)
+
 # Options for running Arch Linux / NixOS on houji
 
 Three ways forward after [FINDINGS](FINDINGS.md). Only option 3 is hardware
 virtualization; options 1 and 2 follow the route LineageOS and Droidian take.
 **Option 3 works today** on the stock kernel: Arch Linux ARM runs as a Gunyah
-客户机 under DroidVM ([journal/51](journal/51-first-linux-guest-boots.md)–[58](journal/58-pseudo-unprotected-nokaslr.md)).
+guest under DroidVM ([journal/51](journal/51-first-linux-guest-boots.md)–[58](journal/58-pseudo-unprotected-nokaslr.md)).
 Background on the kernel and Droidian is in
 [journal/43](journal/43-kernel-config-and-droidian.md).
 
@@ -26,7 +28,7 @@ unchanged. It does not get `/dev/kvm` or custom secondary VMs either.
 |---|---|---|---|
 | hardware virtualization | no (still Gunyah's primary VM, owns EL1) | no (shares Android's kernel) | **yes** |
 | independent system | yes, own kernel and init | no, isolated userspace only | yes, own kernel and systemd |
-| state | not started | not started | **working**: Arch, 4 vCPU, 1.4 GiB, network, `pacman -Syu` |
+| state | not started | feasible, not set up | **working**: Arch, 4 vCPU, 1.4 GiB, network, `pacman -Syu` |
 | host changes | custom `boot` (+`vendor_boot`) | root | root (KernelSU), `gh-hugepage-reserve` + DroidVM runtime modules; stock kernel |
 | performance | native | native | near-native CPU; virtio I/O |
 | hardware | phone hardware, see "drivers" below | Android's, via its kernel; no display of its own | virtio only: disk, net, serial, (gpu/input/sound need guest kernel v3) |
@@ -161,9 +163,8 @@ Two VM modes, both working:
 
 ## Recommendation
 
-* **use option 3** — it is working: Arch Linux ARM in a Gunyah 客户机 next to
-  Android, managed in DroidVM. Next steps: guest kernel v3 for a desktop
-  ([DESKTOP](DESKTOP.md)), more RAM if needed (`pool_want`);
-* option 2 remains the zero-setup fallback when no VM is wanted;
+* **use option 3** — it is working: Arch Linux ARM in a Gunyah guest next to
+  Android, managed in DroidVM. Next steps in [ROADMAP](ROADMAP.md);
+* option 2 remains a quick fallback (hours to set up) when no VM is wanted;
 * option 1 only if the goal becomes replacing Android, starting with the offline
   CRC check of the vendor modules.

@@ -1,4 +1,4 @@
-# Arch Linux ARM boots in the Gunyah 客户机
+# Arch Linux ARM boots in the Gunyah guest
 
 Stock host (6.1.118 + KernelSU LKM + `gunyah_kvcalloc_mod`), no kernel patch.
 

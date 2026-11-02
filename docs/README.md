@@ -1,12 +1,15 @@
+[English](README.md) | [中文](README.zh.md)
+
 # Docs
 
-Start with [FINDINGS](FINDINGS.md) (one page, results and boundary) and
-[OPTIONS](OPTIONS.md) (the three ways forward), then
-[STATE](STATE.md) (exact state), [ROADMAP](ROADMAP.md) (what is left) and
-[RESTORE](RESTORE.md) (rollback).
+Start with [STATE](STATE.md) (current setup and how to use it) and
+[FINDINGS](FINDINGS.md) (one page, how it got there), then
+[OPTIONS](OPTIONS.md) (the three routes, pros and cons),
+[ROADMAP](ROADMAP.md) (what is left) and [RESTORE](RESTORE.md) (rollback).
 
 ## Reference
 
+* [vendor-loader](reference/vendor-loader.md) — detailed state and plans of the closed `/dev/qgunyah` route
 * [qgunyah-abi](reference/qgunyah-abi.md) — implemented ioctl surface, traps
 * [bundle-format](reference/bundle-format.md) — MBN bundle and dtbo containers,
   signing flow
@@ -74,6 +77,26 @@ later corrected. Where it disagrees with `reference/`, the reference wins.
 | [41](journal/41-stock-launcher-same-failure.md) | ROM matches stock; `cpusys_vm` runs via `qcrosvm`; vendor launcher fails on `trustedvm` like our probe |
 | [42](journal/42-patched-bundles-never-loaded.md) | **patched bundles were never loaded; `qtestsign` is rejected** — invalidates 09, 25–39 |
 | [43](journal/43-kernel-config-and-droidian.md) | stock kernel config gaps, existing drivers, Droidian's android14-6.1 kernel |
+
+### Unauthenticated VM route (44–58)
+
+| | |
+|---|---|
+| [44](journal/44-crosvm-start-is-nomem.md) | crosvm's `VM_START` fails (error 2, misread as `NOMEM`; see 51) |
+| [45](journal/45-nomem-sweep.md) | every userspace lever swept, unchanged |
+| [46](journal/46-nomem-is-a-known-kernel-bug.md) | ~~a known SM8650 VMID kernel bug~~ (does not apply here, see 50) |
+| [47](journal/47-kernel-flashed.md) | Gunyah-fix kernel flashed, no change |
+| [48](journal/48-releases-do-not-contain-the-fix.md) | the published fix kernels never build the patched module |
+| [49](journal/49-kvcalloc-module-on-stock.md) | the fork's `modules/` is the kvcalloc fix; loads on stock |
+| [50](journal/50-vmid-patch-is-a-noop.md) | the VMID patch is a no-op; only `VM_START` fails |
+| [51](journal/51-first-linux-guest-boots.md) | **a Linux guest boots**: guest RAM must be lent; error 2 = `NORESOURCE` |
+| [52](journal/52-userspace-and-new-rom.md) | Alpine userspace; ROM 3.0.307.0 has the same hyp/RM |
+| [53](journal/53-arch-linux-arm-boots.md) | **Arch Linux ARM boots** to a systemd login |
+| [54](journal/54-droidvm-fork-or-not.md) | DroidVM already does this; memory ceiling = fragmentation |
+| [55](journal/55-arch-in-droidvm-app.md) | Arch under the DroidVM app: DHCP, ssh, pacman |
+| [56](journal/56-wifi-landlock-syu.md) | Wi-Fi NAT, Landlock/RTC guest kernel, `pacman -Syu` |
+| [57](journal/57-hugepage-reserve-1536m.md) | `gh-hugepage-reserve`: 1.5 GiB guest |
+| [58](journal/58-pseudo-unprotected-nokaslr.md) | pseudo-unprotected mode with `nokaslr` |
 
 ### Harness
 

@@ -26,7 +26,7 @@ EOF
 cat > "$R/etc/profile.d/zz-report.sh" <<'EOF'
 if [ "$(tty)" = /dev/ttyS0 ] && [ ! -e /run/reported ]; then
   touch /run/reported
-  echo "=== Arch Linux ARM in a Gunyah 客户机 ==="
+  echo "=== Arch Linux ARM in a Gunyah guest ==="
   cat /etc/os-release | head -2; uname -a; systemctl is-system-running
   free -m | head -2; df -h / | tail -1
 fi

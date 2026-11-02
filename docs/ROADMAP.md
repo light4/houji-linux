@@ -1,68 +1,42 @@
+[English](ROADMAP.md) | [中文](ROADMAP.zh.md)
+
 # Roadmap
 
-Three options for running Arch/NixOS are compared in [OPTIONS](OPTIONS.md). This
-page tracks option 3 (hardware virtualization); options 1 and 2 have their plans
-there.
+The Gunyah VM route works ([STATE](STATE.md)). What is left, roughly in order of
+value.
 
-## The one open question
+## Make it routine
 
-**Why does the RM refuse `VM_START` (`NOMEM`) for an unauthenticated crosvm
-VM on `/dev/gunyah`?** That path is the only one that can run our own kernel
-(`journal/42`). Configure and init succeed; start fails, with or without pVM
-options and vm-config overlays.
+* **ssh without the relay**: run the relay as a KernelSU `service.sh`, or use
+  Termux `ssh` on the phone (`ssh alarm@192.168.233.128`), so nothing is lost
+  after a reboot.
+* **ssh keys** instead of passwords; drop the serial root autologin once keys work.
+* **Bring up on start**: let the DroidVM daemon start the VM at boot (after the
+  first unlock).
 
-The vendor-loader (`/dev/qgunyah`) path is closed for custom code: bundles are
-authenticated against Xiaomi's root, `qtestsign` is rejected (`journal/42`).
+## Guest kernel
 
-## Option 3: needs a patched kernel
+* **v3 drivers**: `DRM_VIRTIO_GPU`, `DRM_SIMPLEDRM`, `VIRTIO_INPUT`, `SND_VIRTIO`
+  (were `=m` in defconfig and dropped by `MODULES=n`); needed for any display.
+* **Arch's own kernel**: pseudo-unprotected mode no longer needs
+  `DMA_RESTRICTED_POOL`, so a stock `linux-aarch64` might boot via DroidVM's UEFI
+  (`edk2-gunyah`) and update with `pacman`.
+* **KASLR**: find why the early relocation fails after the shim hand-off
+  ([journal/58](journal/58-pseudo-unprotected-nokaslr.md)); report upstream.
 
-`NOMEM` survived every userspace lever (`journal/45`) because it is a kernel bug:
-SM8650's RM VMID is above `QCOM_SCM_MAX_MANAGED_VMID` and
-`gunyah_qcom.c` hardcodes the HLOS VMID for lends
-([journal/46](journal/46-nomem-is-a-known-kernel-bug.md)). Fix is 38 lines, with a
-houji fork and ready builds available; requires flashing a custom kernel, which is
-also what option 1 needs.
+## Resources
 
-## Old notes on option 3
+* **More vCPUs**: 4 now; SM8650 has 8 cores (1 + 5 + 2 of three classes) —
+  measure before going higher, and consider `cpu_affinity`.
+* **More RAM**: raise `pool_want` (2 MiB pages) together with `memory_mb`; the pool
+  is memory taken from Android while held.
 
-* bisect crosvm's generated `gunyah-vm-config` against `cpusys_vm`'s working one
-  (vcpus `affinity`/`affinity-map`, memory base, vdevices) via
-  `--device-tree-overlay`, since the RM parses that node;
-* try `--cpus` / memory sizes / no virtio devices to see whether `NOMEM`
-  tracks a quota;
-* get an RM log: `/sys/kernel/debug/gunyah/hyp_uart_ctrl` and `/proc/tzdbg/hyp_log`
-  are present but silent on this production hyp.
+## Later
 
-## If kernel RE continues
+* NixOS image (same kernel, different rootfs).
+* A desktop, once the v3 drivers exist.
+* Option 1 (native Linux) only if replacing Android becomes the goal — see
+  [OPTIONS](OPTIONS.md).
 
-* read the loader's start path in `gunyah_loader` (around `gh_vcpu_ioctl`'s
-  `VCPU_RUN` branch, `.text+0x14e8`): what it does with the segments, the entry
-  offset and the run hypercall (`journal/32`).
-* diff against `cpusys_vm`'s start, the only known-good VM on this device
-  (`journal/35`).
-
-## If a newer ROM arrives
-
-Work the tripwires first ([FINDINGS](FINDINGS.md#tripwires-for-a-firmware-update)): `mssecapp` in `hyp_a`, Gunyah in the AVF
-APEX, `/sys/kernel/load_guestvm_*`. Then, in order:
-
-1. re-check the ABI: `0x4020B245` and the `0xBCxx` family should stop answering
-   `EINVAL` (`journal/21`, `journal/23`);
-2. re-run the stock `qcrosvm` on `trustedvm` (`journal/41`) — it is the
-   reference, and it already works on this ROM for `cpusys_vm`;
-3. `GH_GET_QUEUE_INFO` and `ACK_DRIVER_OK` should exist — both are the observables
-   we lacked (`journal/21`, `journal/24`);
-4. only then: guest console, rootfs, `gh_virt_wdt` keep-alive.
-
-## Build conventions from the working bundle
-
-`cpusys_vm.mdt` shows what the loader expects (`journal/38`): `p_paddr` = the
-guest memory base, 2 MB-aligned segment offsets, `PT_LOAD` flags `0x6`. Keep that
-in any future bundle, even though it is not sufficient on its own.
-
-## Parked routes
-
-* crosvm / pVM on `/dev/gunyah`: needs a vendor-signed pvmfw; `RM start` →
-  `ENODEV` (`journal/11`, `journal/13`).
-* `/dev/kvm`: closed on this firmware — EL2 belongs to Gunyah (`journal/01`,
-  `journal/03`, `journal/06`).
+Obsolete plans for the vendor-loader route are kept in
+[reference/vendor-loader](reference/vendor-loader.md).

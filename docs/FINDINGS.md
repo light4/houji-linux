@@ -1,7 +1,6 @@
+[English](FINDINGS.md) | [中文](FINDINGS.zh.md)
+
 # Findings — one page
-
-> **Update (journal/51):** a Linux 客户机 boots on the stock kernel when guest RAM is *lent* (`crosvm-dv --protected-vm-without-firmware`). The `VM_START` error was `NORESOURCE` (2), not `NOMEM` — earlier decodes were off by one — and the VMID patch is irrelevant.
-
 
 Everything below was verified on device (houji / 23127PN0CC, HyperOS 3.0.7.0,
 KernelSU). The device matches the stock `OS3.0.7.0.WNCCNXM` fastboot ROM
@@ -70,30 +69,43 @@ phone resets — **the same signature as our probe**
 ([journal/41](journal/41-stock-launcher-same-failure.md), correcting
 [journal/40](journal/40-why-qcrosvm-cannot-run-here.md)).
 
-## 6. Where a custom OS could still come from
+## 6. The unauthenticated VM on `/dev/gunyah` works
 
 Only an **unauthenticated VM on `/dev/gunyah`** (mainline ABI, crosvm, own kernel)
-avoids the signature. On this ROM the Resource Manager rejects its `VM_START` with
-`NOMEM` (configure and init succeed). Memory size, IPA base, vCPU count, VM name,
-`vm-attrs`, optional devices, doorbell count and stopping the only other VM all
-leave it unchanged ([journal/45](journal/45-nomem-sweep.md),
-[journal/42](journal/42-patched-bundles-never-loaded.md)).
+avoids the signature, and it runs on the **stock** kernel:
 
-**Not a dead end:** it is a kernel bug, not the firmware
-([journal/46](journal/46-nomem-is-a-known-kernel-bug.md)) — on SM8650 the RM's VMID
-is above `QCOM_SCM_MAX_MANAGED_VMID` and `gunyah_qcom.c` hardcodes the HLOS VMID
-for every lend, so SCM rejects them all. A 38-line fix and a houji fork with ready
-builds exist. Running a patched kernel (an unlocked bootloader allows it) reopens
-the path — and the same kernel is what option 1 needs for native Linux.
+* **The error was misread.** `VM_START` answers `Error: 2`, which is
+  `NORESOURCE` in both the kernel's `rsc_mgr.c` and the RM source — not `NOMEM`
+  as decoded from journal/45 on ([journal/51](journal/51-first-linux-guest-boots.md)).
+* **The VMID kernel bug does not apply here.** Tracing shows every
+  `qcom_scm_assign_mem` succeeding; the vendor `gunyah_qcom` already maps guest
+  VMIDs above 0x3F, and the host's own VMID is 3 (= HLOS), so the 38-line patch is a
+  no-op. The published "fix" kernels do not even build it
+  ([journal/48](journal/48-releases-do-not-contain-the-fix.md),
+  [journal/50](journal/50-vmid-patch-is-a-noop.md)).
+* **The real cause**: the Resource Manager (open source,
+  `quic/gunyah-resource-manager`, same strings as `hypvm*.mbn`) requires the
+  guest's main memory parcel to be **lent**. `GH_VM_SET_USER_MEM_REGION` *shares*
+  it; `process_image_memparcel()` denies that, and `VM_START` reports any such
+  failure as `NORESOURCE`. DroidVM's crosvm lends
+  (`--protected-vm-without-firmware`) → `VM_START` succeeds and a Linux kernel boots
+  ([journal/51](journal/51-first-linux-guest-boots.md)).
+* **Memory ceiling = fragmentation.** Beyond ~256 MiB the lend fails after some
+  uptime (tens of thousands of 16 KiB fragments). `gh-hugepage-reserve` holds
+  2 MiB pages from early boot; with it the guest gets 1.5 GiB
+  ([journal/54](journal/54-droidvm-fork-or-not.md), [journal/57](journal/57-hugepage-reserve-1536m.md)).
+* **Result**: Arch Linux ARM with systemd, network and `pacman -Syu`, managed by
+  the DroidVM app ([journal/53](journal/53-arch-linux-arm-boots.md)–[58](journal/58-pseudo-unprotected-nokaslr.md)).
 
-So on stock firmware: no `/dev/kvm`, no custom code in a secured VM, and the
-unauthenticated path needs a kernel patch. Without flashing a kernel, proot-style
-containers are the only way to run Arch/NixOS userspace here.
+So on stock firmware: no `/dev/kvm`, no custom code in a secured VM — but an
+unauthenticated Gunyah VM with our own kernel works without flashing anything
+beyond root.
 
 ## What next
 
-The three remaining options — native Linux as the primary OS, a real chroot, and
-the unauthenticated VM — are compared in [OPTIONS](OPTIONS.md).
+Current state: [STATE](STATE.md). The three routes — native Linux, a real chroot,
+and the Gunyah VM — are compared in [OPTIONS](OPTIONS.md); remaining work is in
+[ROADMAP](ROADMAP.md).
 
 ## Tripwires for a firmware update
 
@@ -103,5 +115,5 @@ adb shell su -c 'strings /apex/com.android.virt/bin/virtualizationservice | grep
 adb shell su -c 'ls /sys/kernel/load_guestvm_*'          # newer ABI
 ```
 
-Any hit re-opens the work; the harness, tools and ABI notes in this repo are the
-starting point.
+Any hit makes the `/dev/kvm` and vendor-loader routes worth another look; the
+harness, tools and ABI notes in this repo are the starting point.

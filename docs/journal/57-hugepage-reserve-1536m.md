@@ -1,4 +1,4 @@
-# gh-hugepage-reserve: the 客户机 gets 1.5 GiB
+# gh-hugepage-reserve: the guest gets 1.5 GiB
 
 * Installed `gh-hugepage-reserve` **v12** (Droid-VM release zip) with
   `ksud module install`. On boot `post-fs-data.sh` insmods
