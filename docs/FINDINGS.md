@@ -8,6 +8,11 @@ partition-for-partition, except KernelSU's `init_boot`
 ([journal/41](journal/41-stock-launcher-same-failure.md)). Numbers, commands and raw logs are in the journal; where an early
 journal entry was later corrected, the correction is linked too.
 
+Since [journal/59](journal/59-global-rom-and-debian-sid.md) the phone runs the Global ROM
+`OS3.0.304.0.WNCMIXM` (host kernel 6.1.138, same hypervisor `gunyah-6de79709c`).
+The tripwires below stay negative and the `/dev/gunyah` route (section 6)
+works unchanged there.
+
 ## 1. `/dev/kvm` cannot be had on this firmware
 
 KVM needs EL2; EL2 belongs to Qualcomm's Gunyah hypervisor from XBL onwards.
@@ -117,3 +122,5 @@ adb shell su -c 'ls /sys/kernel/load_guestvm_*'          # newer ABI
 
 Any hit makes the `/dev/kvm` and vendor-loader routes worth another look; the
 harness, tools and ABI notes in this repo are the starting point.
+
+Last run: Global `OS3.0.304.0.WNCMIXM` (journal/59): no hit on any of the three.

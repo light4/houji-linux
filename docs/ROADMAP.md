@@ -8,7 +8,7 @@ value.
 ## Make it routine
 
 * **ssh without the relay**: run the relay as a KernelSU `service.sh`, or use
-  Termux `ssh` on the phone (`ssh alarm@192.168.233.128`), so nothing is lost
+  Termux `ssh` on the phone (`ssh debian@192.168.134.128`), so nothing is lost
   after a reboot.
 * **ssh keys** instead of passwords; drop the serial root autologin once keys work.
 * **Bring up on start**: let the DroidVM daemon start the VM at boot (after the
@@ -18,9 +18,12 @@ value.
 
 * **v3 drivers**: `DRM_VIRTIO_GPU`, `DRM_SIMPLEDRM`, `VIRTIO_INPUT`, `SND_VIRTIO`
   (were `=m` in defconfig and dropped by `MODULES=n`); needed for any display.
-* **Arch's own kernel**: pseudo-unprotected mode no longer needs
-  `DMA_RESTRICTED_POOL`, so a stock `linux-aarch64` might boot via DroidVM's UEFI
-  (`edk2-gunyah`) and update with `pacman`.
+* **File capabilities**: enable `EXT4_FS_SECURITY` (`security.*` xattrs); without it
+  `setcap` fails in the guest (journal/59, `ping` worked around with `ping_group_range`).
+* **The distro's own kernel**: pseudo-unprotected mode no longer needs
+  `DMA_RESTRICTED_POOL`, so a stock `linux-aarch64` (Arch) or `linux-image-arm64`
+  (Debian) might boot via DroidVM's UEFI (`edk2-gunyah`) and update with the
+  package manager.
 * **KASLR**: find why the early relocation fails after the shim hand-off
   ([journal/58](journal/58-pseudo-unprotected-nokaslr.md)); report upstream.
 

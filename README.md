@@ -2,7 +2,8 @@
 
 # houji-linux
 
-Running Arch Linux / NixOS on the Xiaomi 14 (houji, SM8650, HyperOS 3.0.7.0),
+Running Linux (Debian sid, Arch Linux ARM, NixOS) on the Xiaomi 14 (houji, SM8650;
+HyperOS 3.0.7.0 China, now 3.0.304.0 Global),
 without proot.
 
 ## Status
@@ -11,7 +12,7 @@ without proot.
 |---|---|
 | `/dev/kvm` | closed — EL2 belongs to the Gunyah hypervisor |
 | VM via vendor loader `/dev/qgunyah` | closed — only Xiaomi-signed VMs boot |
-| unauthenticated VM via `/dev/gunyah` (DroidVM) | **works on the stock kernel** — Arch Linux ARM, 4 vCPU, 1.4 GiB, network, `pacman -Syu` ([STATE](docs/STATE.md)) |
+| unauthenticated VM via `/dev/gunyah` (DroidVM) | **works on the stock kernel** — Debian sid (Global ROM, [journal/59](docs/journal/59-global-rom-and-debian-sid.md); Arch Linux ARM before, 53–58), 4 vCPU, 1.4 GiB, network, `apt`/`pacman` ([STATE](docs/STATE.md)) |
 | native Linux as primary OS | not started — kernel needs `DEVTMPFS`/`FHANDLE`/namespaces |
 | chroot on the Android kernel | feasible, not set up — not an independent system |
 

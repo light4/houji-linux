@@ -14,9 +14,36 @@ fastboot flash boot   ~/playground/houji-linux/baseline/boot_a_OS3.0.7.0_orig.im
 | `dtbo_a` | `6264b8e66e2e7720e9f593f93f9b7390ccbe5675c04d15c0c13abf1ff327456b` |
 | `boot_a` | `c88537b854911c142a920989865b663a5b7e0b3faab7025a7858b7a7adddafa9` |
 
-## 内核 / root
+## 当前设备：全球版 ROM（journal/59）
 
-当前状态（`journal/48` 之后）：**原厂内核**（`boot_a` 就是原厂镜像，sha256 `c88537b8…`），`init_boot` 里是 **KernelSU v3.3.1 LKM**，管理器 v3.3.1。备份在 `~/Downloads/houji_backup/`：
+从 journal/59 起，手机运行的是**全球版** ROM `OS3.0.304.0.WNCMIXM`，用它自带的 `flash_all.sh` 整包刷入。下面各节里国行 `OS3.0.7.0` 的原厂镜像和备份属于旧 ROM，**不要**单独刷到全球版系统上。要回退就整包重刷线刷 ROM。
+
+| 分区 | 设备上的内容 | sha256 |
+|---|---|---|
+| `boot_a` | 全球版原厂 `boot.img` | `c1df90a5915dad7044eed6b3ac897ba4898f040f15e9cd1670d74b0def89d1ff` |
+| `init_boot_a` | 全球版 `init_boot.img` + KernelSU 3.3.1 LKM | `6cc8f04b6f6469f573815700815db15a0142cb86ea802fc59b6f74c9362f352f`（原厂：`2c7888fe…cbd064`） |
+| `dtbo_a` | 全球版原厂 `dtbo.img`（分区前 20 MiB） | `a5a54a5aaafbf240dffd2fe16b61846b3ef770447f6b23f4de08717268a4b843` |
+
+构建机上的文件，在 `~/Downloads/houji_rom/`：
+
+| 文件 | 内容 |
+|---|---|
+| `houji_global_images_OS3.0.304.0.WNCMIXM_20260908.0000.00_16.0_global_8f1c952b2d.tgz` | 全球版线刷包（当前），md5 `8f1c952b2d74e9ed33e41a95aff60943` |
+| `houji_eea_global_images_OS3.0.304.0.WNCEUXM_…_414730a1d8.tgz` | 欧版线刷包（备用） |
+| `rom.tgz` | 国行线刷包 `OS3.0.7.0.WNCCNXM`（journal/59 之前的系统） |
+| `ksu/kernelsu_patched_20261106_060206.img` | 上表里的 KernelSU `init_boot` |
+| `backup/20261106_OS3.0.304.0.WNCMIXM/` | EFS/基带和校准分区（`modemst1/2`、`fsg`、`fsc`、`persist` 等），sha256 在 `SHA256SUMS` |
+
+```bash
+fastboot flash init_boot_ab ~/Downloads/houji_rom/houji_global_images_OS3.0.304.0.WNCMIXM_16.0/images/init_boot.img   # 去掉 KernelSU
+fastboot flash init_boot_ab ~/Downloads/houji_rom/ksu/kernelsu_patched_20261106_060206.img                           # 重新装 KernelSU
+```
+
+不要回锁 bootloader：国行硬件刷了全球版，又改了 `init_boot`，锁上之后开不了机。
+
+## 内核 / root（国行 3.0.7.0，到 journal/58 为止）
+
+`journal/48` 之后的状态：**原厂内核**（`boot_a` 就是原厂镜像，sha256 `c88537b8…`），`init_boot` 里是 **KernelSU v3.3.1 LKM**，管理器 v3.3.1。备份在 `~/Downloads/houji_backup/`：
 
 | 文件 | 内容 |
 |---|---|
@@ -52,11 +79,11 @@ VM 完全在用户空间里，删掉它不会动到任何刷过的分区。
 | 内容 | 位置 |
 |---|---|
 | 客户机内核 | `/data/local/tmp/guest.Image`（编译：`guest/build_guest.sh`） |
-| 客户机磁盘 | `/data/local/tmp/alarm.img`（制作：`guest/mk_alarm.sh`） |
+| 客户机磁盘 | `/data/local/tmp/debian-sid.img`（制作：`guest/mk_debian_sid.sh`）；Arch 的 `alarm.img`（`guest/mk_alarm.sh`）已随 `/data` 清掉 |
 | VM / 网络配置 | `/data/data/cn.classfun.droidvm/files/{vms,networks,disks}.json` |
 | 应用 | `cn.classfun.droidvm`：卸载会同时删掉配置和运行时模块 |
 
-备份 `alarm.img` 时先停掉 VM（`adb pull`），它是唯一有状态的部分。
+备份客户机磁盘时先停掉 VM（`adb pull`），它是唯一有状态的部分。
 
 ## 固件 bundle
 
@@ -68,7 +95,7 @@ adb shell su -c 'mount -o rw,remount /vendor/firmware_mnt; rm /vendor/firmware_m
 
 之后加载器会回退到 `/product/vm-system/trustedvm/boot/trustedvm`。
 
-当前设备状态：**原厂 `dtbo_a`、原厂 `trustedvm` bundle**，`boot_a` 未改动。（`/vendor/firmware_mnt` 重启后还在，里面的文件要手动删。）
+当前设备状态（全球版 ROM，journal/59）：**原厂 `dtbo_a`、原厂 `trustedvm` bundle**，原厂 `boot_a`。（`/vendor/firmware_mnt` 重启后还在，里面的文件要手动删。）
 
 ## 如果手机卡死
 

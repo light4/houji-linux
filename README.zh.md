@@ -2,7 +2,7 @@
 
 # houji-linux
 
-在小米 14（houji，SM8650，HyperOS 3.0.7.0）上运行 Arch Linux / NixOS，不用 proot。
+在小米 14（houji，SM8650；原来是 HyperOS 3.0.7.0 国行，现在是 3.0.304.0 全球版）上运行 Linux（Debian sid、Arch Linux ARM、NixOS），不用 proot。
 
 ## 现状
 
@@ -10,7 +10,7 @@
 |---|---|
 | `/dev/kvm` | 不通：EL2 归 Gunyah hypervisor 所有 |
 | 厂商加载器 `/dev/qgunyah` 起 VM | 不通：只能启动小米签名的 VM |
-| 经 `/dev/gunyah` 的无认证 VM（DroidVM） | **原厂内核上可用**：Arch Linux ARM，4 vCPU、1.4 GiB 内存，能联网、能 `pacman -Syu`（[STATE](docs/STATE.zh.md)） |
+| 经 `/dev/gunyah` 的无认证 VM（DroidVM） | **原厂内核上可用**：Debian sid（全球版 ROM，[journal/59](docs/journal/59-global-rom-and-debian-sid.md)；之前是 Arch Linux ARM，53–58），4 vCPU、1.4 GiB 内存，能联网、能用 `apt`/`pacman`（[STATE](docs/STATE.zh.md)） |
 | 原生 Linux 作为主系统 | 未开始：内核缺 `DEVTMPFS`/`FHANDLE`/命名空间 |
 | 在 Android 内核上 chroot | 可行，未搭建；不是独立系统 |
 

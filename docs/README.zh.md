@@ -74,7 +74,7 @@
 | [42](journal/42-patched-bundles-never-loaded.md) | **改过的 bundle 从来没被加载过；`qtestsign` 被拒绝**，09、25–39 作废 |
 | [43](journal/43-kernel-config-and-droidian.md) | 原厂内核配置缺什么、现有驱动、Droidian 的 android14-6.1 内核 |
 
-### 无认证 VM 路线（44–58）
+### 无认证 VM 路线（44–59）
 
 | | |
 |---|---|
@@ -93,6 +93,7 @@
 | [56](journal/56-wifi-landlock-syu.md) | Wi-Fi NAT、带 Landlock/RTC 的客户机内核、`pacman -Syu` |
 | [57](journal/57-hugepage-reserve-1536m.md) | `gh-hugepage-reserve`：客户机 1.5 GiB |
 | [58](journal/58-pseudo-unprotected-nokaslr.md) | pseudo-unprotected 模式加 `nokaslr` |
+| [59](journal/59-global-rom-and-debian-sid.md) | **全球版 ROM 3.0.304.0**（hyp 不变）；在 6.1.138 上重建 DroidVM；**Debian sid** 客户机 |
 
 ### 测试框架
 

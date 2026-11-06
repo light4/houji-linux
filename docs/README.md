@@ -78,7 +78,7 @@ later corrected. Where it disagrees with `reference/`, the reference wins.
 | [42](journal/42-patched-bundles-never-loaded.md) | **patched bundles were never loaded; `qtestsign` is rejected** — invalidates 09, 25–39 |
 | [43](journal/43-kernel-config-and-droidian.md) | stock kernel config gaps, existing drivers, Droidian's android14-6.1 kernel |
 
-### Unauthenticated VM route (44–58)
+### Unauthenticated VM route (44–59)
 
 | | |
 |---|---|
@@ -97,6 +97,7 @@ later corrected. Where it disagrees with `reference/`, the reference wins.
 | [56](journal/56-wifi-landlock-syu.md) | Wi-Fi NAT, Landlock/RTC guest kernel, `pacman -Syu` |
 | [57](journal/57-hugepage-reserve-1536m.md) | `gh-hugepage-reserve`: 1.5 GiB guest |
 | [58](journal/58-pseudo-unprotected-nokaslr.md) | pseudo-unprotected mode with `nokaslr` |
+| [59](journal/59-global-rom-and-debian-sid.md) | **Global ROM 3.0.304.0** (same hyp); DroidVM rebuilt on 6.1.138; **Debian sid** guest |
 
 ### Harness
 

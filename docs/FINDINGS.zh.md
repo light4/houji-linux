@@ -4,6 +4,8 @@
 
 以下都在真机上验证过（houji / 23127PN0CC，HyperOS 3.0.7.0，KernelSU）。设备与原厂 `OS3.0.7.0.WNCCNXM` fastboot ROM 逐分区一致，只有 KernelSU 的 `init_boot` 不同（[journal/41](journal/41-stock-launcher-same-failure.md)）。数字、命令和原始日志都在实验日志里；早期日志后来被更正的地方，也附上了更正的链接。
 
+从 [journal/59](journal/59-global-rom-and-debian-sid.md) 起，手机运行的是全球版 `OS3.0.304.0.WNCMIXM`（宿主内核 6.1.138，hypervisor 同样是 `gunyah-6de79709c`）。下面的检查项都没有命中，`/dev/gunyah` 路线（第 6 节）在全球版上照样可用。
+
 ## 1. 这套固件上拿不到 `/dev/kvm`
 
 KVM 需要 EL2，而从 XBL 开始 EL2 就归高通的 Gunyah hypervisor 所有。两条把 EL2 交还出来的路都不通：
@@ -58,3 +60,5 @@ adb shell su -c 'ls /sys/kernel/load_guestvm_*'          # 更新的 ABI
 ```
 
 只要有任何一项命中，`/dev/kvm` 和厂商加载器这两条路就值得重新看；本仓库里的测试框架、工具和 ABI 笔记就是起点。
+
+最近一次检查：全球版 `OS3.0.304.0.WNCMIXM`（journal/59），三项都没有命中。
